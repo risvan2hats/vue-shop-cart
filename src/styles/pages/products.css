@@ -8,7 +8,10 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 20px;
-  height: max-content
+  height: max-content;
+  background: #fff;
+  position: sticky;
+  top: 20px;
 }
 
 .filter-group {
@@ -20,6 +23,16 @@
   border: 0
 }
 
+.filter-group select,
+.filter-group input[type="number"] {
+  width: 100%;
+  border: 1px solid #dce3dd;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
 .filter-group label {
   display: block;
   margin: 9px 0;
@@ -29,17 +42,23 @@
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   margin-bottom: 20px
 }
 
 .toolbar input {
-  max-width: 340px
+  flex: 1;
+  max-width: none
 }
 
 .toolbar select {
   max-width: 190px
+}
+
+.catalog-layout > section .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 @media(max-width:850px) {
@@ -48,7 +67,12 @@
   }
 
   .filters {
-    order: 2
+    order: 2;
+    position: static;
+  }
+
+  .catalog-layout > section .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -67,7 +91,8 @@
 }
 
 .filters-submit {
-  width: 100%
+  width: 100%;
+  margin-top: 16px;
 }
 
 .pagination-actions {

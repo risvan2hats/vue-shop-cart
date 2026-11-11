@@ -329,3 +329,52 @@ h3 {
     height: 64px
   }
 }
+
+.product-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card > a {
+  flex: 1;
+}
+
+.product-variants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 16px 14px;
+}
+
+.product-variants label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+.product-variants select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.product-actions {
+  padding: 0 16px 16px;
+}
+
+.product-actions button {
+  width: 100%;
+  padding: 10px 12px;
+}

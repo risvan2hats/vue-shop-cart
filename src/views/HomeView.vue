@@ -58,6 +58,11 @@ onMounted(() => {
                         Loading categories...
                     </div>
 
+                    <!-- Empty -->
+                    <div v-else-if="!categoryStore.categories.length" class="empty-state">
+                        No categories available.
+                    </div>
+
                     <!-- Categories -->
                     <RouterLink v-else v-for="category in categoryStore.categories.slice(0, 4)" :key="category.id"
                         class="category" :to="{ name: 'products', query: { category: category.slug } }">

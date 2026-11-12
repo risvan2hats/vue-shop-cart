@@ -97,3 +97,17 @@
 .product-details {
   margin-top: 30px
 }
+
+.detail-grid :disabled {
+  cursor: not-allowed;
+  opacity: 0.55
+}
+
+.detail-grid button:disabled {
+  background: #aab4ad;
+  color: #fff;
+}
+
+.detail-grid button:disabled:hover {
+  background: #aab4ad;
+}

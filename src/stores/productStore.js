@@ -8,25 +8,19 @@ export const useProductStore = defineStore('product', {
         meta: null,
         loading: false,
         error: null,
+
         selectedProduct: null,
         productLoading: false,
         productError: null,
+        productNotFound: false,
     }),
 
-    getters: {
-        featuredProducts: (state) => state.products,
-
-        formatPrice: () => (price) => new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(Number(price || 0)),
-
-        getProductImage: () => (product) => {
-            return product.image_url || product.image || null;
-        },
-    },
-
     actions: {
+
+        /**
+         * Fetch products from the API with optional query parameters.
+         * @param {Object} params - Query parameters for filtering, sorting, etc.
+         */
         async fetchProducts(params = {}) {
             this.loading = true;
             this.error = null;
@@ -47,19 +41,38 @@ export const useProductStore = defineStore('product', {
                 this.loading = false;
             }
         },
+
+        /**
+         * Fetch a single product by its ID.
+         * @param {string|number} id - The ID of the product to fetch.
+         */
         async fetchProduct(id) {
             this.productLoading = true;
             this.productError = null;
+            this.productNotFound = false;
             this.selectedProduct = null;
 
             try {
                 const response = await productService.getProduct(id);
-                this.selectedProduct = response.data || response;
+                const product = response.data || response;
+
+                if (!product || !product.id) {
+                    this.productNotFound = true;
+                    return;
+                }
+
+                this.selectedProduct = product;
+
             } catch (error) {
-                this.productError = error.response?.data?.message
-                    || 'Unable to load product. Please try again.';
+                if (error.response?.status === 404) {
+                    this.productNotFound = true;
+                } else {
+                    this.productError = error.response?.data?.message
+                        || 'Unable to load product. Please try again.';
+                }
 
                 console.error('Product fetch failed:', error);
+
             } finally {
                 this.productLoading = false;
             }

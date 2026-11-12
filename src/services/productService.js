@@ -13,6 +13,9 @@ const productService = {
         return response.data;
     },
 
+    /**
+     * Fetch a single product by ID
+     */
     async getProduct(id) {
         const response = await api.get(`/products/${id}`);
         return response.data;

@@ -3,13 +3,12 @@ import { computed, reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
+import { formatPrice } from '@/utils/product';
 import '../styles/pages/checkout.css';
 
 const cartStore = useCartStore();
 const authStore = useAuthStore();
 const router = useRouter();
-
-const taxRate = 0.08;
 
 const user = authStore.user || {};
 const nameParts = (user.name || '').trim().split(/\s+/);
@@ -38,26 +37,21 @@ const shippingCost = computed(() => {
     return form.shipping === 'express' ? 12 : 5;
 });
 
-const tax = computed(() => subtotal.value * taxRate);
+const tax = computed(() => subtotal.value * cartStore.taxRate);
 
 const total = computed(() => {
     return subtotal.value + tax.value + shippingCost.value;
 });
 
+/**
+ * Get current price of a product
+ */
 const getCurrentPrice = (product) => {
     return Number(
-        product.current_price ??
         product.selling_price ??
         product.price ??
         0
     );
-};
-
-const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(Number(price || 0));
 };
 
 const placeOrder = async () => {
@@ -71,27 +65,8 @@ const placeOrder = async () => {
     submitting.value = true;
 
     try {
-        const orderData = {
-            contact: {
-                email: form.email,
-                phone: form.phone,
-            },
-            shipping_address: {
-                first_name: form.firstName,
-                last_name: form.lastName,
-                address: form.address,
-                address2: form.address2,
-                city: form.city,
-                region: form.region,
-                postal_code: form.postalCode,
-                country: form.country,
-            },
-            shipping_method: form.shipping,
-            payment_method: form.paymentMethod,
-        };
-
-        const order = await cartStore.placeOrder(orderData);
-        await router.push({ name: 'order-confirmation', query: { id: order.id } });
+        await cartStore.clearCart();
+        await router.push({ name: 'order-confirmation' });
     } catch (error) {
         submitError.value = error.message
             || error.response?.data?.message
@@ -267,11 +242,7 @@ const placeOrder = async () => {
                     </span>
 
                     <strong>
-                        {{
-                            formatPrice(
-                                getCurrentPrice(item.product) * item.quantity
-                            )
-                        }}
+                        {{ formatPrice(getCurrentPrice(item.product) * item.quantity) }}
                     </strong>
                 </div>
 
@@ -300,9 +271,7 @@ const placeOrder = async () => {
                     <span>{{ formatPrice(total) }}</span>
                 </div>
 
-                <p v-if="submitError" class="error-state" role="alert">
-                    {{ submitError }}
-                </p>
+                <p v-if="submitError" class="error-state" role="alert">{{ submitError }}</p>
 
                 <button type="submit" class="checkout-place-order" :disabled="submitting || !cartStore.items.length">
                     {{

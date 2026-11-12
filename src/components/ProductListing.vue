@@ -1,7 +1,21 @@
+
 <script setup>
-import { reactive } from 'vue';
-import { useProductStore } from '@/stores/productStore';
+import { reactive, watch } from 'vue';
+
 import { useCartStore } from '@/stores/cartStore';
+
+import {
+    getActiveVariants,
+    getVariantAttributes,
+    getVariantOptions,
+    getSelectedVariant,
+    getCurrentPrice,
+    getOriginalPrice,
+    hasDiscount,
+    getProductStock,
+    getProductImage,
+    formatPrice,
+} from '@/utils/product';
 
 const props = defineProps({
     products: {
@@ -20,76 +34,143 @@ const props = defineProps({
 
 const emit = defineEmits(['retry']);
 
-const productStore = useProductStore();
 const cartStore = useCartStore();
+
 const selectedVariants = reactive({});
 
-const getAvailableVariants = (product) => (
-    (product.variants || []).filter((variant) => variant.is_active !== false)
-);
-
-const getVariantAttributes = (product) => [
-    ...new Set(getAvailableVariants(product).flatMap(
-        (variant) => Object.keys(variant.attributes || {}),
-    )),
-];
-
+/**
+ * Get selected attributes for a product.
+ */
 const getSelectedAttributes = (product) => {
-    if (!selectedVariants[product.id]) {
-        selectedVariants[product.id] = {
-            ...(getAvailableVariants(product)[0]?.attributes || {}),
-        };
+    return selectedVariants[product.id] || {};
+};
+
+/**
+ * Get selected product variant.
+ */
+const getProductVariant = (product) => {
+    return getSelectedVariant(
+        product,
+        getSelectedAttributes(product)
+    );
+};
+
+/**
+ * Get current product price.
+ */
+const getProductPrice = (product) => {
+    return getCurrentPrice(product, getProductVariant(product));
+};
+
+/**
+ * Get original product price.
+ */
+const getProductOriginalPrice = (product) => {
+    return getOriginalPrice(product, getProductVariant(product));
+};
+
+/**
+ * Check whether product has a discount.
+ */
+const hasProductDiscount = (product) => {
+    return hasDiscount(product, getProductVariant(product));
+};
+
+/**
+ * Check product stock.
+ */
+const isOutOfStock = (product) => {
+    return getProductStock(product, getProductVariant(product)) < 1;
+};
+
+/**
+ * Check whether product is already in cart.
+ */
+const isInCart = (product) => {
+    const variantId = getProductVariant(product)?.id;
+
+    return cartStore.items.some((item) =>
+        item.product_id === product.id &&
+        (item.variant_id ?? item.variant?.id) === variantId
+    );
+};
+
+/**
+ * Check whether product is being added.
+ */
+const isAddingToCart = (product) => {
+    return cartStore.addingProductId === product.id;
+};
+
+/**
+ * Get add-to-cart button label.
+ */
+const getButtonLabel = (product) => {
+    if (isAddingToCart(product)) return 'Adding...';
+    if (isInCart(product)) return 'Already in Cart';
+
+    if (
+        getActiveVariants(product).length &&
+        !getProductVariant(product)
+    ) {
+        return 'Select options';
     }
 
-    return selectedVariants[product.id];
-};
+    if (isOutOfStock(product)) return 'Out of stock';
 
-const getSelectedVariant = (product) => {
-    const attributes = getSelectedAttributes(product);
-    return getAvailableVariants(product).find((variant) =>
-        Object.entries(attributes).every(([key, value]) => variant.attributes?.[key] === value)
-        && Object.keys(attributes).length === Object.keys(variant.attributes || {}).length
-    );
+    return 'Add to Cart';
 };
 
 /**
- * Get current selling price
+ * Check whether product can be added to cart.
  */
-const getCurrentPrice = (product) => {
-    const variant = getSelectedVariant(product);
-    return Number(
-        variant?.selling_price ??
-        variant?.price ??
-        product.current_price ?? product.selling_price ?? product.price ?? 0
-    );
+const canAddToCart = (product) => {
+    const hasVariants = getActiveVariants(product).length > 0;
+
+    return !isInCart(product)
+        && !isOutOfStock(product)
+        && !isAddingToCart(product)
+        && (!hasVariants || !!getProductVariant(product));
 };
 
 /**
- * Check product discount
- */
-const hasDiscount = (product) => {
-    return getCurrentPrice(product) < Number(product.price || 0);
-};
-
-/**
- * Add product to cart
+ * Add product to cart.
  */
 const addToCart = async (product) => {
+    if (!canAddToCart(product)) {
+        return;
+    }
+
     try {
-        await cartStore.addToCart(product, 1, getSelectedVariant(product) || null);
+        await cartStore.addToCart(
+            product,
+            1,
+            getProductVariant(product)
+        );
     } catch (error) {
         console.error('Add to cart failed:', error);
     }
 };
 
 /**
- * Check whether product is already in cart
+ * Initialize the first available variant for each product.
  */
-const isInCart = (product) => {
-    const variantId = getSelectedVariant(product)?.id;
-    return cartStore.items.some((item) => item.product_id === product.id
-        && (item.variant_id ?? item.variant?.id) === variantId);
-};
+watch(
+    () => props.products,
+    (products) => {
+        products.forEach((product) => {
+            if (
+                !selectedVariants[product.id] ||
+                !Object.keys(selectedVariants[product.id]).length
+            ) {
+                selectedVariants[product.id] = {
+                    ...(getActiveVariants(product)[0]?.attributes || {}),
+                };
+            }
+        });
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
@@ -101,7 +182,10 @@ const isInCart = (product) => {
     <!-- Error -->
     <div v-else-if="error" class="error-state">
         <p>{{ error }}</p>
-        <button @click="emit('retry')">Try again</button>
+
+        <button @click="emit('retry')">
+            Try again
+        </button>
     </div>
 
     <!-- Empty -->
@@ -111,13 +195,24 @@ const isInCart = (product) => {
 
     <!-- Product listing -->
     <div v-else class="grid">
-        <article v-for="product in products" :key="product.id" class="product-card">
-            <RouterLink :to="{
-                name: 'product-details',
-                params: { id: product.id }
-            }">
+        <article
+            v-for="product in products"
+            :key="product.id"
+            class="product-card"
+        >
+            <RouterLink
+                :to="{
+                    name: 'product-details',
+                    params: { id: product.id }
+                }"
+            >
                 <div class="product-image">
-                    <img :src="product.image_url || product.image" :alt="product.title" loading="lazy">
+                    <img
+                        v-if="getProductImage(product)"
+                        :src="getProductImage(product)"
+                        :alt="product.title"
+                        loading="lazy"
+                    >
                 </div>
 
                 <div class="product-info">
@@ -126,21 +221,34 @@ const isInCart = (product) => {
                     <p>{{ product.category?.name || 'General' }}</p>
 
                     <span class="price">
-                        {{ productStore.formatPrice(getCurrentPrice(product)) }}
+                        {{ formatPrice(getProductPrice(product)) }}
 
-                        <span v-if="hasDiscount(product)" class="old-price">
-                            {{ productStore.formatPrice(product.price) }}
+                        <span
+                            v-if="hasProductDiscount(product)"
+                            class="old-price"
+                        >
+                            {{ formatPrice(getProductOriginalPrice(product)) }}
                         </span>
                     </span>
                 </div>
             </RouterLink>
 
-            <div v-if="getAvailableVariants(product).length" class="product-variants">
-                <label v-for="attribute in getVariantAttributes(product)" :key="attribute">
+            <!-- Product variants -->
+            <div
+                v-if="getActiveVariants(product).length"
+                class="product-variants"
+            >
+                <label
+                    v-for="attribute in getVariantAttributes(product)"
+                    :key="attribute"
+                >
                     {{ attribute }}
-                    <select v-model="getSelectedAttributes(product)[attribute]">
+
+                    <select
+                        v-model="selectedVariants[product.id][attribute]"
+                    >
                         <option
-                            v-for="value in [...new Set(getAvailableVariants(product).map(variant => variant.attributes?.[attribute]).filter(value => value != null))]"
+                            v-for="value in getVariantOptions(product, attribute)"
                             :key="value"
                             :value="value"
                         >
@@ -150,17 +258,15 @@ const isInCart = (product) => {
                 </label>
             </div>
 
+            <!-- Product actions -->
             <div class="product-actions">
-                <button type="button" :disabled="isInCart(product) ||
-                    (getAvailableVariants(product).length ? !getSelectedVariant(product) || getSelectedVariant(product).stock < 1 : product.stock < 1) ||
-                    cartStore.addingProductId === product.id
-                    " @click="addToCart(product)">
-                    {{
-                        cartStore.addingProductId === product.id
-                            ? 'Adding...'
-                            : isInCart(product)
-                                ? 'Already in Cart'
-                                : product.stock < 1 ? 'Out of stock' : 'Add to Cart' }} </button>
+                <button
+                    type="button"
+                    :disabled="!canAddToCart(product)"
+                    @click="addToCart(product)"
+                >
+                    {{ getButtonLabel(product) }}
+                </button>
             </div>
         </article>
     </div>

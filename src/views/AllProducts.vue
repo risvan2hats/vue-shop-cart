@@ -30,7 +30,7 @@ const filters = reactive({
 const fetchProducts = (page = 1) => {
     productStore.fetchProducts({
         page,
-        per_page: 12,
+        per_page: 9,
         search: filters.search || undefined,
         category: filters.category || undefined,
         min_price: filters.minPrice || undefined,
@@ -60,28 +60,50 @@ const applyFilters = () => {
 /**
  * Change pagination page
  */
+/**
+ * Change pagination page
+ */
 const changePage = (page) => {
-    if (page < 1 || page > (productStore.meta?.last_page || 1)) {
+    const lastPage = productStore.meta?.last_page || 1;
+
+    if (page < 1 || page > lastPage) {
         return;
+    }
+
+    const query = { ...route.query };
+
+    if (page === 1) {
+        delete query.page;
+    } else {
+        query.page = page;
     }
 
     router.push({
         name: 'products',
-        query: { ...route.query, page: page === 1 ? undefined : String(page) },
+        query,
     });
 };
 
+/**
+ * Update filters and products when URL changes
+ */
 watch(
     () => route.fullPath,
     () => {
-        filters.search = String(route.query.search || '');
-        filters.category = String(route.query.category || '');
-        filters.minPrice = String(route.query.min_price || '');
-        filters.maxPrice = String(route.query.max_price || '');
-        filters.inStock = route.query.in_stock === '1';
-        filters.sort = String(route.query.sort || 'featured');
+        // Get filter values from URL
+        const query = route.query;
 
-        fetchProducts(Number(route.query.page) || 1);
+        // Update selected filters
+        filters.search = String(query.search || '');
+        filters.category = String(query.category || '');
+        filters.minPrice = String(query.min_price || '');
+        filters.maxPrice = String(query.max_price || '');
+        filters.inStock = query.in_stock === '1';
+        filters.sort = String(query.sort || 'featured');
+
+        // Fetch products for the current page
+        const page = Number(query.page) || 1;
+        fetchProducts(page);
     },
     { immediate: true },
 );

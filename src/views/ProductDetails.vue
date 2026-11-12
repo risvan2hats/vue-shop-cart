@@ -1,6 +1,6 @@
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import '@/styles/pages/product-detail.css';
@@ -9,58 +9,97 @@ import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import ProductListing from '@/components/ProductListing.vue';
 
-const route = useRoute();
-const productStore = useProductStore();
-const cartStore = useCartStore();
+import {
+    getActiveVariants,
+    getVariantAttributes,
+    getVariantOptions,
+    getSelectedVariant,
+    getCurrentPrice,
+    getOriginalPrice,
+    hasDiscount,
+    getProductStock,
+    getProductImage,
+    formatPrice,
+} from '@/utils/product';
 
-const quantity = ref(1);
-const selectedAttributes = ref({});
+const route         = useRoute();
+const productStore  = useProductStore();
+const cartStore     = useCartStore();
+
+const quantity              = ref(1);
+const selectedAttributes    = ref({});
 
 const product = computed(() => productStore.selectedProduct);
-const activeVariants = computed(() => (
-    (product.value?.variants || []).filter((variant) => variant.is_active !== false)
-));
-const variantAttributes = computed(() => [
-    ...new Set(activeVariants.value.flatMap((variant) => Object.keys(variant.attributes || {}))),
-]);
-const selectedVariant = computed(() => activeVariants.value.find((variant) =>
-    Object.entries(selectedAttributes.value).every(
-        ([key, value]) => variant.attributes?.[key] === value
-    ) && Object.keys(selectedAttributes.value).length === Object.keys(variant.attributes || {}).length
-));
-const currentStock = computed(() => activeVariants.value.length
-    ? selectedVariant.value?.stock ?? 0
-    : product.value?.stock ?? 0);
-const originalPrice = computed(() => selectedVariant.value?.price ?? product.value?.price);
 
 /**
- * Get current selling price
+ * Get active product variants.
  */
-const getCurrentPrice = (item) => {
-    const variant = item === product.value ? selectedVariant.value : null;
-    return Number(
-        variant?.selling_price ??
-        variant?.price ??
-        item.current_price ?? item.selling_price ?? item.price ?? 0
-    );
-};
+const activeVariants = computed(() => {
+    return getActiveVariants(product.value);
+});
 
 /**
- * Check product discount
+ * Get available variant attributes.
  */
-const hasDiscount = (item) => {
-    return getCurrentPrice(item) < Number(originalPrice.value || item.price || 0);
-};
+const variantAttributes = computed(() => {
+    return getVariantAttributes(product.value);
+});
 
 /**
- * Format product price
+ * Get selected product variant.
  */
-const formatPrice = (price) => {
-    return productStore.formatPrice(price);
-};
+const selectedVariant = computed(() => {
+    return getSelectedVariant(product.value, selectedAttributes.value);
+});
 
 /**
- * Get related products from already loaded products
+ * Get current product price.
+ */
+const currentPrice = computed(() => {
+    return getCurrentPrice(product.value, selectedVariant.value);
+});
+
+/**
+ * Get original product price.
+ */
+const originalPrice = computed(() => {
+    return getOriginalPrice(product.value, selectedVariant.value);
+});
+
+/**
+ * Check product discount.
+ */
+const discounted = computed(() => {
+    return hasDiscount(product.value, selectedVariant.value);
+});
+
+/**
+ * Get available product stock.
+ */
+const currentStock = computed(() => {
+    return getProductStock(product.value, selectedVariant.value);
+});
+
+/**
+ * Check whether product is being added to cart.
+ */
+const isAddingToCart = computed(() => {
+    return cartStore.addingProductId === product.value?.id;
+});
+
+/**
+ * Check whether product can be added to cart.
+ */
+const canAddToCart = computed(() => {
+    return currentStock.value > 0
+        && quantity.value >= 1
+        && quantity.value <= currentStock.value
+        && (!activeVariants.value.length || !!selectedVariant.value)
+        && !isAddingToCart.value;
+});
+
+/**
+ * Get related products from already loaded products.
  */
 const relatedProducts = computed(() => {
     if (!product.value) {
@@ -76,40 +115,63 @@ const relatedProducts = computed(() => {
 });
 
 /**
- * Load product details
+ * Load product details.
  */
 const loadProduct = (id) => {
     quantity.value = 1;
     selectedAttributes.value = {};
+
     productStore.fetchProduct(id);
 };
 
-watch(product, (value) => {
+/**
+ * Set default variant attributes when product changes.
+ */
+watch(product, () => {
     selectedAttributes.value = {
         ...(activeVariants.value[0]?.attributes || {}),
     };
+
+    quantity.value = 1;
 });
 
+/**
+ * Keep quantity within available stock.
+ */
+watch(currentStock, (stock) => {
+    if (quantity.value > stock) {
+        quantity.value = stock > 0 ? stock : 1;
+    }
+});
+
+/**
+ * Add product to cart.
+ */
 const addToCart = async () => {
+    if (!canAddToCart.value) {
+        return;
+    }
+
     try {
-        await cartStore.addToCart(product.value, quantity.value, selectedVariant.value || null);
+        await cartStore.addToCart(
+            product.value,
+            quantity.value,
+            selectedVariant.value
+        );
     } catch (error) {
         console.error('Add to cart failed:', error);
     }
 };
 
-onMounted(() => {
-    loadProduct(route.params.id);
-});
-
 /**
- * Reload when the route product ID changes
+ * Load product when the route ID changes.
  */
 watch(
     () => route.params.id,
     (id) => {
         loadProduct(id);
-    }
+    },
+    { immediate: true }
 );
 </script>
 
@@ -131,9 +193,16 @@ watch(
         </div>
 
         <!-- Product not found -->
-        <div v-else-if="!product" class="empty-state">
+        <div
+            v-else-if="productStore.productNotFound || !product"
+            class="empty-state"
+        >
             <h2>Product not found</h2>
-            <p>The product you're looking for is unavailable.</p>
+
+            <p>
+                Sorry, we couldn't find the product you're looking for.
+                It may have been removed or is no longer available.
+            </p>
 
             <RouterLink class="button" to="/products">
                 Back to shop
@@ -152,38 +221,28 @@ watch(
                 <section>
                     <div class="gallery-main">
                         <img
-                            v-if="product.image_url || product.image"
-                            :src="product.image_url || product.image"
+                            v-if="getProductImage(product)"
+                            :src="getProductImage(product)"
                             :alt="product.title"
                         >
                     </div>
                 </section>
 
                 <section>
-                    <span
-                        v-if="hasDiscount(product)"
-                        class="tag"
-                    >
-                        SALE
-                    </span>
+                    <span v-if="discounted" class="tag">SALE</span>
 
                     <div class="eyebrow" style="margin-top: 18px">
-                        {{ product.category?.name || 'Northstar essentials' }}
+                        {{ product.category?.name || '' }}
                     </div>
 
                     <h1>{{ product.title }}</h1>
 
-                    <p class="muted">
-                        {{ product.description }}
-                    </p>
+                    <p class="muted">{{ product.description }}</p>
 
                     <div class="detail-price">
-                        {{ formatPrice(getCurrentPrice(product)) }}
+                        {{ formatPrice(currentPrice) }}
 
-                        <span
-                            v-if="hasDiscount(product)"
-                            class="old-price"
-                        >
+                        <span v-if="discounted" class="old-price">
                             {{ formatPrice(originalPrice) }}
                         </span>
                     </div>
@@ -200,11 +259,22 @@ watch(
 
                     <hr style="border: 0; border-top: 1px solid var(--line); margin: 22px 0">
 
-                    <div v-for="attribute in variantAttributes" :key="attribute" class="field">
-                        <label :for="`variant-${attribute}`">{{ attribute }}</label>
-                        <select :id="`variant-${attribute}`" v-model="selectedAttributes[attribute]">
+                    <!-- Product variants -->
+                    <div
+                        v-for="attribute in variantAttributes"
+                        :key="attribute"
+                        class="field"
+                    >
+                        <label :for="`variant-${attribute}`">
+                            {{ attribute }}
+                        </label>
+
+                        <select
+                            :id="`variant-${attribute}`"
+                            v-model="selectedAttributes[attribute]"
+                        >
                             <option
-                                v-for="value in [...new Set(activeVariants.map(variant => variant.attributes?.[attribute]).filter(value => value != null))]"
+                                v-for="value in getVariantOptions(product, attribute)"
                                 :key="value"
                                 :value="value"
                             >
@@ -213,6 +283,7 @@ watch(
                         </select>
                     </div>
 
+                    <!-- Quantity -->
                     <div class="field">
                         <label for="quantity">Quantity</label>
 
@@ -227,23 +298,22 @@ watch(
                         >
                     </div>
 
+                    <!-- Product actions -->
                     <div class="actions">
                         <button
                             type="button"
-                            :disabled="currentStock < 1 || (activeVariants.length > 0 && !selectedVariant) || cartStore.addingProductId === product.id"
+                            :disabled="!canAddToCart"
                             @click="addToCart"
                         >
-                            {{ cartStore.addingProductId === product.id ? 'Adding...' : 'Add to cart' }}
+                            {{ isAddingToCart ? 'Adding...' : 'Add to cart' }}
                         </button>
 
-                        <RouterLink
-                            class="button secondary"
-                            to="/cart"
-                        >
+                        <RouterLink class="button secondary" to="/cart">
                             View cart
                         </RouterLink>
                     </div>
 
+                    <!-- Product details -->
                     <div style="margin-top: 30px">
                         <h3>Product details</h3>
 
@@ -261,17 +331,14 @@ watch(
                             <br>
 
                             <strong>Availability:</strong>
-                            {{ product.stock > 0 ? 'In stock' : 'Out of stock' }}
+                            {{ currentStock > 0 ? 'In stock' : 'Out of stock' }}
                         </p>
                     </div>
                 </section>
             </div>
 
             <!-- Related products -->
-            <section
-                v-if="relatedProducts.length"
-                class="section"
-            >
+            <section v-if="relatedProducts.length" class="section">
                 <div class="section-head">
                     <div>
                         <div class="eyebrow">You may also like</div>

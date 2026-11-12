@@ -14,6 +14,13 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
+
+        /**
+         * Log in a user with the provided credentials.
+         * @param {Object} credentials - The user's login credentials.
+         * @returns {Promise<Object>} - The logged-in user data.
+         * @throws {Error} - If login fails, an error is thrown with a message.
+         */
         async login(credentials) {
             this.loading = true;
             this.error = null;
@@ -24,10 +31,10 @@ export const useAuthStore = defineStore('auth', {
                 this.user = response.user;
                 this.token = response.token;
 
-                localStorage.setItem('auth_user', JSON.stringify(response.user));
-                localStorage.setItem('auth_token', response.token);
+                localStorage.setItem('auth_user', JSON.stringify(this.user));
+                localStorage.setItem('auth_token', this.token);
 
-                return response.user;
+                return this.user;
             } catch (error) {
                 this.error = error.response?.data?.message
                     || 'Invalid email or password. Please try again.';
@@ -38,6 +45,9 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        /**
+         * Log out the current user and clear authentication data.
+         */
         logout() {
             this.user = null;
             this.token = null;

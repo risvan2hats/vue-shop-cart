@@ -2,45 +2,41 @@
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
+import { formatPrice } from '@/utils/product';
+
 import '../styles/pages/cart.css';
 
 const cartStore = useCartStore();
 
-const taxRate = 0.08;
-const shipping = 5;
-
 const subtotal = computed(() => cartStore.totalAmount);
+const tax = computed(() => subtotal.value * cartStore.taxRate);
+const total = computed(() => subtotal.value + tax.value + (subtotal.value > 0 ? cartStore.shipping : 0));
 
-const tax = computed(() => subtotal.value * taxRate);
-
-const total = computed(() => subtotal.value + tax.value + (subtotal.value > 0 ? shipping : 0));
-
+/**
+ * Get current price of a cart item
+ */
 const getCurrentPrice = (item) => {
     return Number(
-        item?.variant?.selling_price ??
-        item?.variant?.price ??
-        item.product.current_price ?? item.product.selling_price ?? item.product.price ?? 0
+        item?.variant?.selling_price ?? item?.variant?.price ??
+        item.product.selling_price ?? item.product.price ?? 0
     );
 };
 
-const getVariantAttributes = (item) => item.variant?.attributes || {};
-
-const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(Number(price || 0));
+/**
+ * Increase or decrease item quantity
+ */
+const changeQuantity = (item, amount) => {
+    updateQuantity(item, Number(item.quantity) + amount);
 };
 
+/**
+ * Update item quantity
+ */
 const updateQuantity = async (item, quantity) => {
     const newQuantity = Number(quantity);
-
-    if (!Number.isInteger(newQuantity) || newQuantity < 1) {
-        return;
-    }
-
     const stock = item.variant?.stock ?? item.product.stock;
-    if (newQuantity > stock) {
+
+    if (!Number.isInteger(newQuantity) || newQuantity < 1 || newQuantity > stock) {
         return;
     }
 
@@ -51,18 +47,9 @@ const updateQuantity = async (item, quantity) => {
     }
 };
 
-const increaseQuantity = (item) => {
-    if (item.quantity < (item.variant?.stock ?? item.product.stock)) {
-        updateQuantity(item, Number(item.quantity) + 1);
-    }
-};
-
-const decreaseQuantity = (item) => {
-    if (item.quantity > 1) {
-        updateQuantity(item, Number(item.quantity) - 1);
-    }
-};
-
+/**
+ * Remove item from cart
+ */
 const removeItem = async (cartItemId) => {
     try {
         await cartStore.removeItem(cartItemId);
@@ -95,79 +82,52 @@ const removeItem = async (cartItemId) => {
 
         <div v-else class="cart-layout">
             <section>
-                <p v-if="cartStore.error" class="error-state" role="alert">
-                    {{ cartStore.error }}
-                </p>
-
                 <article v-for="item in cartStore.items" :key="item.id" class="cart-item">
                     <div class="cart-thumb">
-                        <RouterLink
-                            :to="{ name: 'product-details', params: { id: item.product_id } }"
-                            :aria-label="`View ${item.product.title} details`"
-                        >
+                        <RouterLink :to="{ name: 'product-details', params: { id: item.product_id } }"
+                            :aria-label="`View ${item.product.title} details`">
                             <img :src="item.product.image_url || item.product.image" :alt="item.product.title">
                         </RouterLink>
                     </div>
 
                     <div>
                         <h3>
-                            <RouterLink :to="{ name: 'product-details', params: { id: item.product_id } }">
-                                {{ item.product.title }}
-                            </RouterLink>
+                            <RouterLink :to="{ name: 'product-details', params: { id: item.product_id } }">{{
+                                item.product.title }}</RouterLink>
                         </h3>
 
-                        <p class="muted">
-                            {{ item.product.category?.name || 'General' }}
-                        </p>
+                        <p class="muted">{{ item.product.category?.name || 'General' }}</p>
 
-                        <p v-if="Object.keys(getVariantAttributes(item)).length" class="muted">
-                            <span
-                                v-for="(value, attribute) in getVariantAttributes(item)"
-                                :key="attribute"
-                            >
+                        <p v-if="Object.keys(item.variant?.attributes || {}).length" class="muted">
+                            <span v-for="(value, attribute) in (item.variant?.attributes || {})" :key="attribute">
                                 {{ attribute }}: {{ value }}&nbsp;
                             </span>
                         </p>
 
-                        <p class="price">
-                            {{ formatPrice(getCurrentPrice(item)) }}
-                        </p>
+                        <p class="price">{{ formatPrice(getCurrentPrice(item)) }}</p>
 
                         <label class="muted">Quantity</label>
 
                         <div class="quantity-control">
-                            <button type="button" :disabled="item.quantity <= 1 || cartStore.updatingItemId === item.id" @click="decreaseQuantity(item)">
-                                −
-                            </button>
-
-                            <input type="number" min="1" :max="item.variant?.stock ?? item.product.stock" :value="item.quantity"
-                                :disabled="cartStore.updatingItemId === item.id"
+                            <button type="button" :disabled="item.quantity <= 1 || cartStore.updatingItemId === item.id"
+                                @click="changeQuantity(item, -1)">−</button>
+                            <input type="number" min="1" :max="item.variant?.stock ?? item.product.stock"
+                                :value="item.quantity" :disabled="cartStore.updatingItemId === item.id"
                                 @change="updateQuantity(item, $event.target.value)">
-
-                            <button type="button" :disabled="item.quantity >= (item.variant?.stock ?? item.product.stock) || cartStore.updatingItemId === item.id"
-                                @click="increaseQuantity(item)">
-                                +
-                            </button>
+                            <button type="button"
+                                :disabled="item.quantity >= (item.variant?.stock ?? item.product.stock) || cartStore.updatingItemId === item.id"
+                                @click="changeQuantity(item, 1)"> +</button>
                         </div>
                     </div>
 
                     <div>
-                        <strong>
-                            {{ formatPrice(getCurrentPrice(item) * item.quantity) }}
-                        </strong>
-
-                        <p>
-                            <button type="button" class="remove-link" @click="removeItem(item.id)">
-                                Remove
-                            </button>
-                        </p>
+                        <strong>{{ formatPrice(getCurrentPrice(item) * item.quantity) }}</strong>
+                        <p><button type="button" class="remove-link" @click="removeItem(item.id)">Remove</button></p>
                     </div>
                 </article>
 
                 <div class="actions">
-                    <RouterLink to="/products" class="button secondary">
-                        Continue shopping
-                    </RouterLink>
+                    <RouterLink to="/products" class="button secondary">Continue shopping</RouterLink>
                 </div>
             </section>
 
@@ -203,10 +163,8 @@ const removeItem = async (cartItemId) => {
                     Proceed to checkout
                 </RouterLink>
 
-                <p class="muted cart-disclaimer">
-                    Shipping and tax are estimates. Final amounts are confirmed
-                    at checkout.
-                </p>
+                <p class="muted cart-disclaimer">Shipping and tax are estimates. Final amounts are confirmed at
+                    checkout.</p>
             </aside>
         </div>
     </main>

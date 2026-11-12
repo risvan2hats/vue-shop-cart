@@ -7,11 +7,10 @@ const cartStore = useCartStore();
 
 <template>
     <main class="container">
-        <section v-if="cartStore.order" class="success">
+        <section v-if="cartStore.checkoutComplete" class="success">
             <div class="success-icon" aria-hidden="true">✓</div>
             <div class="eyebrow">Order confirmed</div>
             <h1>Thank you for your order!</h1>
-            <p class="muted">Your demo order was accepted. No payment was processed.</p>
             <RouterLink class="button" to="/products">Continue shopping</RouterLink>
         </section>
 

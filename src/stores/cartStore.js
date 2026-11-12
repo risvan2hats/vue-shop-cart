@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
+
 import cartService from '@/services/cartService';
 import checkoutService from '@/services/checkoutService';
+
+import { getCurrentPrice } from '@/utils/product';
 
 export const useCartStore = defineStore('cart', {
     state: () => ({
@@ -8,39 +11,57 @@ export const useCartStore = defineStore('cart', {
         addingProductId: null,
         updatingItemId: null,
         error: null,
-        order: null,
+        checkoutComplete: false,
+        taxRate: 0.08,
+        shipping: 5,
     }),
 
     getters: {
-        totalItems: (state) => state.items.length,
+        totalItems: (state) => {
+            return state.items.reduce(
+                (total, item) => total + Number(item.quantity || 0),
+                0
+            );
+        },
 
         totalAmount: (state) => {
             return state.items.reduce((total, item) => {
-                const price = Number(
-                    item.variant?.selling_price ??
-                    item.variant?.price ??
-                    item.product.current_price ??
-                    item.product.selling_price ??
-                    item.product.price ??
-                    0
-                );
+                const price = getCurrentPrice(item.product, item.variant);
 
-                return total + price * item.quantity;
+                return total + price * Number(item.quantity || 0);
             }, 0);
         },
     },
 
     actions: {
+        /**
+         * Fetch the cart items from the server.
+         */
         async fetchCart() {
+            this.error = null;
+
             try {
                 const response = await cartService.getCart();
                 const data = response.data?.data ?? response.data;
-                this.items = Array.isArray(data) ? data : data?.items || [];
+
+                this.items = Array.isArray(data)
+                    ? data
+                    : data?.items || [];
+
+                return this.items;
             } catch (error) {
                 console.error('Fetch cart failed:', error);
             }
         },
+
+        /**
+         * Add a product to the cart.
+         */
         async addToCart(product, quantity = 1, variant = null) {
+            if (!product?.id || !Number.isInteger(quantity) || quantity < 1) {
+                return;
+            }
+
             this.addingProductId = product.id;
             this.error = null;
 
@@ -48,13 +69,16 @@ export const useCartStore = defineStore('cart', {
                 const response = await cartService.addItem(
                     product.id,
                     quantity,
-                    variant?.id,
+                    variant?.id
                 );
 
-                const existingItem = this.items.find(
-                    (item) => item.product_id === product.id
-                        && (item.variant_id ?? item.variant?.id) === variant?.id
-                );
+                const existingItem = this.items.find((item) => {
+                    const sameProduct = String(item.product_id) === String(product.id);
+                    const existingVariantId = item.variant_id ?? item.variant?.id;
+                    const sameVariant = String(existingVariantId ?? '') === String(variant?.id ?? '');
+
+                    return sameProduct && sameVariant;
+                });
 
                 if (existingItem) {
                     existingItem.quantity += quantity;
@@ -64,27 +88,33 @@ export const useCartStore = defineStore('cart', {
                         product_id: product.id,
                         quantity,
                         product,
-                        variant_id: variant?.id,
+                        variant_id: variant?.id ?? null,
                         variant,
                     });
                 }
 
                 return response;
             } catch (error) {
-                this.error = error.response?.data?.message
-                    || 'Unable to add product to cart. Please try again.';
+                this.error = error.response?.data?.message || 'Unable to add product to cart. Please try again.';
 
                 throw error;
             } finally {
                 this.addingProductId = null;
             }
         },
+
+        /**
+         * Remove an item from the cart.
+         */
         async removeItem(cartItemId) {
             this.error = null;
 
             try {
                 await cartService.removeItem(cartItemId);
-                this.items = this.items.filter((item) => item.id !== cartItemId);
+
+                this.items = this.items.filter(
+                    (item) => String(item.id) !== String(cartItemId)
+                );
             } catch (error) {
                 this.error = error.response?.data?.message
                     || 'Unable to remove item from cart. Please try again.';
@@ -92,8 +122,15 @@ export const useCartStore = defineStore('cart', {
                 throw error;
             }
         },
+
+        /**
+         * Update the quantity of a cart item.
+         */
         async updateItemQuantity(cartItemId, quantity) {
-            const item = this.items.find((cartItem) => cartItem.id === cartItemId);
+            const item = this.items.find(
+                (cartItem) => String(cartItem.id) === String(cartItemId)
+            );
+
             if (!item || !Number.isInteger(quantity) || quantity < 1) {
                 return;
             }
@@ -113,19 +150,24 @@ export const useCartStore = defineStore('cart', {
                 this.updatingItemId = null;
             }
         },
-        async placeOrder(details) {
+
+        /**
+         * Clear the cart after a successful checkout.
+         */
+        async clearCart() {
             if (!this.items.length) {
                 throw new Error('Your cart is empty.');
             }
 
             this.error = null;
             try {
-                const order = await checkoutService.placeOrder(this.items, details);
-                this.order = order;
+                await checkoutService.clearCart();
                 this.items = [];
-                return order;
+                this.checkoutComplete = true;
             } catch (error) {
-                this.error = error.message || 'Unable to place your order. Please try again.';
+                this.error = error.message
+                    || 'Unable to place your order. Please try again.';
+
                 throw error;
             }
         },

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
 const route = useRoute();
+
 const authStore = useAuthStore();
 
 const credentials = reactive({
@@ -14,17 +15,13 @@ const credentials = reactive({
 });
 
 /**
- * Handle login
+ * Handle user login
  */
 const handleLogin = async () => {
     try {
         await authStore.login(credentials);
 
-        const redirect = route.query.redirect;
-
-        router.push(
-            typeof redirect === 'string' ? redirect : '/'
-        );
+        router.push(route.query.redirect || '/');
     } catch (error) {
         console.error('Login failed:', error);
     }
@@ -37,22 +34,18 @@ const handleLogin = async () => {
             <div class="page-title">
                 <div class="eyebrow">Welcome back</div>
                 <h1>Sign in</h1>
-                <p class="muted">
-                    Sign in to continue shopping.
-                </p>
+                <p class="muted">Sign in to continue shopping.</p>
             </div>
 
             <form @submit.prevent="handleLogin">
                 <div class="field">
                     <label for="email">Email address</label>
-
                     <input id="email" v-model="credentials.email" type="email" placeholder="Enter your email"
                         autocomplete="email" required>
                 </div>
 
                 <div class="field">
                     <label for="password">Password</label>
-
                     <input id="password" v-model="credentials.password" type="password"
                         placeholder="Enter your password" autocomplete="current-password" required>
                 </div>

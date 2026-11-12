@@ -58,11 +58,6 @@ onMounted(() => {
                         Loading categories...
                     </div>
 
-                    <!-- Error -->
-                    <div v-else-if="categoryStore.error">
-                        {{ categoryStore.error }}
-                    </div>
-
                     <!-- Categories -->
                     <RouterLink v-else v-for="category in categoryStore.categories.slice(0, 4)" :key="category.id"
                         class="category" :to="{ name: 'products', query: { category: category.slug } }">
@@ -84,8 +79,7 @@ onMounted(() => {
                     <RouterLink to="/products">Shop all →</RouterLink>
                 </div>
 
-                <ProductListing :products="productStore.products.slice(0, 4)" :loading="productStore.loading"
-                    :error="productStore.error" @retry="productStore.fetchProducts({ per_page: 15 })" />
+                <ProductListing :products="productStore.products.slice(0, 4)" :loading="productStore.loading" :error="productStore.error"/>
             </div>
         </section>
         <section class="section collection-section">

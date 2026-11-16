@@ -54,9 +54,11 @@ onMounted(() => {
                 <div class="category-grid">
 
                     <!-- Loading -->
-                    <div v-if="categoryStore.loading">
-                        Loading categories...
-                    </div>
+                    <template v-if="categoryStore.loading">
+                        <div v-for="item in 4" :key="item" class="category skeleton" aria-hidden="true">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                    </template>
 
                     <!-- Empty -->
                     <div v-else-if="!categoryStore.categories.length" class="empty-state">

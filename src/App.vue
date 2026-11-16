@@ -1,4 +1,3 @@
-
 <script setup>
 import { watch } from 'vue';
 
@@ -7,7 +6,7 @@ import Footer from '@/components/Footer.vue';
 
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
-import { errorToast } from '@/composables/useErrorMessage';
+import { toast } from '@/composables/showToast';
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
@@ -32,8 +31,8 @@ watch(
 
     <RouterView />
 
-    <div v-if="errorToast" class="error-toast" role="alert" aria-live="assertive">
-        {{ errorToast }}
+    <div v-if="toast.message" :class="`app-toast app-toast--${toast.type}`">
+        {{ toast.message }}
     </div>
 
     <Footer />

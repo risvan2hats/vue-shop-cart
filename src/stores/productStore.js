@@ -1,7 +1,7 @@
 
 import { defineStore } from 'pinia';
 import productService from '@/services/productService';
-import { useErrorMessage } from '@/composables/useErrorMessage';
+import { showToast } from '@/composables/showToast';
 
 export const useProductStore = defineStore('product', {
     state: () => ({
@@ -29,8 +29,8 @@ export const useProductStore = defineStore('product', {
                 this.products = response.data || [];
                 this.meta = response.meta || null;
 
-            } catch (error) {
-                useErrorMessage(error, 'Unable to load products. Please try again.', 'Load products');
+            } catch {
+                showToast('Unable to load products. Please try again.', 'error');
 
             } finally {
                 this.loading = false;
@@ -57,8 +57,8 @@ export const useProductStore = defineStore('product', {
 
                 this.selectedProduct = product;
 
-            } catch (error) {
-                useErrorMessage(error, 'Unable to load product. Please try again.', 'Load product');
+            } catch {
+                showToast('Unable to load product. Please try again.', 'error');
                 if (error.response?.status === 404) {
                     this.productNotFound = true;
                 }

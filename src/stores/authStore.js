@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import authService from '@/services/authService';
-import { useErrorMessage } from '@/composables/useErrorMessage';
+import { showToast } from '@/composables/showToast';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -33,9 +33,10 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('auth_user', JSON.stringify(this.user));
                 localStorage.setItem('auth_token', this.token);
 
+                showToast('Signed in successfully.', 'success');
                 return this.user;
-            } catch (error) {
-                useErrorMessage(error, 'Unable to sign in. Check your details and try again.', 'Sign in');
+            } catch {
+                showToast('Unable to sign in. Check your details and try again.', 'error');
                 return null;
             } finally {
                 this.loading = false;

@@ -412,7 +412,7 @@ h3 {
   padding: 10px 12px;
 }
 
-.error-toast {
+.app-toast {
   position: fixed;
   right: 20px;
   bottom: 20px;
@@ -420,7 +420,14 @@ h3 {
   max-width: min(420px, calc(100vw - 40px));
   padding: 14px 18px;
   border-radius: 10px;
-  background: #8c2828;
   color: #fff;
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
+.app-toast--error {
+  background: #8c2828;
+}
+
+.app-toast--success {
+  background: #24633d;
 }

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import categoryService from '@/services/categoryService';
-import { useErrorMessage } from '@/composables/useErrorMessage';
+import { showToast } from '@/composables/showToast';
 
 // Define a Pinia store for managing categories
 export const useCategoryStore = defineStore('category', {
@@ -22,8 +22,8 @@ export const useCategoryStore = defineStore('category', {
 
                 this.categories = response.data || [];
 
-            } catch (error) {
-                useErrorMessage(error, 'Unable to load categories. Please try again.', 'Load categories');
+            } catch {
+                showToast('Unable to load categories. Please try again.', 'error');
 
             } finally {
                 this.loading = false;

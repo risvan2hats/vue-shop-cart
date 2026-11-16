@@ -4,7 +4,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProduct } from '@/composables/useProduct';
-import { useErrorMessage } from '@/composables/useErrorMessage';
+import { showToast } from '@/composables/showToast';
 import '../styles/pages/checkout.css';
 
 const cartStore = useCartStore();
@@ -57,17 +57,18 @@ const getCurrentPrice = (product) => {
 
 const placeOrder = async () => {
     if (!cartStore.items.length) {
-        useErrorMessage(new Error('Your cart is empty.'), 'Unable to continue checkout.', 'Checkout');
+        showToast('Your cart is empty.', 'error');
         return;
     }
 
     submitting.value = true;
 
     try {
-        await cartStore.clearCart();
+        const cleared = await cartStore.clearCart();
+        if (!cleared) return;
         await router.push({ name: 'order-confirmation' });
-    } catch (error) {
-        useErrorMessage(error, 'Unable to clear the cart. Please try again.', 'Checkout');
+    } catch {
+        showToast('Unable to clear the cart. Please try again.', 'error');
     } finally {
         submitting.value = false;
     }

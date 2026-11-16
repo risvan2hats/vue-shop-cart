@@ -176,8 +176,13 @@ watch(
     <main class="container section">
 
         <!-- Loading -->
-        <div v-if="productStore.productLoading" class="loading-state">
-            Loading product...
+        <div v-if="productStore.productLoading" class="detail-grid" role="status" aria-label="Loading product" aria-busy="true">
+            <div class="gallery-main skeleton" aria-hidden="true"></div>
+            <div aria-hidden="true">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-subtitle"></div>
+                <div class="skeleton skeleton-title" style="width: 35%; margin-top: 24px"></div>
+            </div>
         </div>
 
         <!-- Product not found -->

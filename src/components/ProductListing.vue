@@ -3,19 +3,7 @@
 import { reactive, watch } from 'vue';
 
 import { useCartStore } from '@/stores/cartStore';
-
-import {
-    getActiveVariants,
-    getVariantAttributes,
-    getVariantOptions,
-    getSelectedVariant,
-    getCurrentPrice,
-    getOriginalPrice,
-    hasDiscount,
-    getProductStock,
-    getProductImage,
-    formatPrice,
-} from '@/utils/product';
+import { useProduct } from '@/composables/useProduct';
 
 const props = defineProps({
     products: {
@@ -26,15 +14,21 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    error: {
-        type: String,
-        default: null,
-    },
 });
 
-const emit = defineEmits(['retry']);
-
 const cartStore = useCartStore();
+const {
+    getActiveVariants,
+    getVariantAttributes,
+    getVariantOptions,
+    getSelectedVariant,
+    getCurrentPrice,
+    getOriginalPrice,
+    hasDiscount,
+    getProductStock,
+    getProductImage,
+    formatPrice,
+} = useProduct();
 
 const selectedVariants = reactive({});
 
@@ -141,15 +135,11 @@ const addToCart = async (product) => {
         return;
     }
 
-    try {
-        await cartStore.addToCart(
-            product,
-            1,
-            getProductVariant(product)
-        );
-    } catch (error) {
-        console.error('Add to cart failed:', error);
-    }
+    await cartStore.addToCart(
+        product,
+        1,
+        getProductVariant(product)
+    );
 };
 
 /**
@@ -175,17 +165,14 @@ watch(
 
 <template>
     <!-- Loading -->
-    <div v-if="loading" class="loading-state">
-        Loading products...
-    </div>
-
-    <!-- Error -->
-    <div v-else-if="error" class="error-state">
-        <p>{{ error }}</p>
-
-        <button @click="emit('retry')">
-            Try again
-        </button>
+    <div v-if="loading" class="grid" role="status" aria-label="Loading products" aria-busy="true">
+        <article v-for="item in 4" :key="item" class="product-card skeleton-card" aria-hidden="true">
+            <div class="product-image skeleton"></div>
+            <div class="product-info">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-subtitle"></div>
+            </div>
+        </article>
     </div>
 
     <!-- Empty -->

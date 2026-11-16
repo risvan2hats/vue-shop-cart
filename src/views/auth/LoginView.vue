@@ -18,12 +18,10 @@ const credentials = reactive({
  * Handle user login
  */
 const handleLogin = async () => {
-    try {
-        await authStore.login(credentials);
+    const user = await authStore.login(credentials);
 
+    if (user) {
         router.push(route.query.redirect || '/');
-    } catch (error) {
-        console.error('Login failed:', error);
     }
 };
 </script>
@@ -49,10 +47,6 @@ const handleLogin = async () => {
                     <input id="password" v-model="credentials.password" type="password"
                         placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
-
-                <p v-if="authStore.error" class="error-state">
-                    {{ authStore.error }}
-                </p>
 
                 <button type="submit" :disabled="authStore.loading">
                     {{ authStore.loading ? 'Signing in...' : 'Sign in' }}

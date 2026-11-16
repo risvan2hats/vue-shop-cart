@@ -2,11 +2,12 @@
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
-import { formatPrice } from '@/utils/product';
+import { useProduct } from '@/composables/useProduct';
 
 import '../styles/pages/cart.css';
 
 const cartStore = useCartStore();
+const { formatPrice } = useProduct();
 
 const subtotal = computed(() => cartStore.totalAmount);
 const tax = computed(() => subtotal.value * cartStore.taxRate);
@@ -40,22 +41,14 @@ const updateQuantity = async (item, quantity) => {
         return;
     }
 
-    try {
-        await cartStore.updateItemQuantity(item.id, newQuantity);
-    } catch (error) {
-        console.error('Update cart quantity failed:', error);
-    }
+    await cartStore.updateItemQuantity(item.id, newQuantity);
 };
 
 /**
  * Remove item from cart
  */
 const removeItem = async (cartItemId) => {
-    try {
-        await cartStore.removeItem(cartItemId);
-    } catch (error) {
-        console.error('Remove cart item failed:', error);
-    }
+    await cartStore.removeItem(cartItemId);
 };
 </script>
 

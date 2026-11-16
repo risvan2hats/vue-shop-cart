@@ -1,17 +1,16 @@
 
 import { defineStore } from 'pinia';
 import productService from '@/services/productService';
+import { useErrorMessage } from '@/composables/useErrorMessage';
 
 export const useProductStore = defineStore('product', {
     state: () => ({
         products: [],
         meta: null,
         loading: false,
-        error: null,
 
         selectedProduct: null,
         productLoading: false,
-        productError: null,
         productNotFound: false,
     }),
 
@@ -23,7 +22,6 @@ export const useProductStore = defineStore('product', {
          */
         async fetchProducts(params = {}) {
             this.loading = true;
-            this.error = null;
 
             try {
                 const response = await productService.getProducts(params);
@@ -32,10 +30,7 @@ export const useProductStore = defineStore('product', {
                 this.meta = response.meta || null;
 
             } catch (error) {
-                this.error = error.response?.data?.message
-                    || 'Unable to load products. Please try again.';
-
-                console.error('Product fetch failed:', error);
+                useErrorMessage(error, 'Unable to load products. Please try again.', 'Load products');
 
             } finally {
                 this.loading = false;
@@ -48,7 +43,6 @@ export const useProductStore = defineStore('product', {
          */
         async fetchProduct(id) {
             this.productLoading = true;
-            this.productError = null;
             this.productNotFound = false;
             this.selectedProduct = null;
 
@@ -64,14 +58,10 @@ export const useProductStore = defineStore('product', {
                 this.selectedProduct = product;
 
             } catch (error) {
+                useErrorMessage(error, 'Unable to load product. Please try again.', 'Load product');
                 if (error.response?.status === 404) {
                     this.productNotFound = true;
-                } else {
-                    this.productError = error.response?.data?.message
-                        || 'Unable to load product. Please try again.';
                 }
-
-                console.error('Product fetch failed:', error);
 
             } finally {
                 this.productLoading = false;

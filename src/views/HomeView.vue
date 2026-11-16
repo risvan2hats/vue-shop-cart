@@ -84,7 +84,7 @@ onMounted(() => {
                     <RouterLink to="/products">Shop all →</RouterLink>
                 </div>
 
-                <ProductListing :products="productStore.products.slice(0, 4)" :loading="productStore.loading" :error="productStore.error"/>
+                <ProductListing :products="productStore.products.slice(0, 4)" :loading="productStore.loading" />
             </div>
         </section>
         <section class="section collection-section">

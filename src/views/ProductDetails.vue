@@ -8,8 +8,9 @@ import '@/styles/pages/product-detail.css';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import ProductListing from '@/components/ProductListing.vue';
+import { useProduct } from '@/composables/useProduct';
 
-import {
+const {
     getActiveVariants,
     getVariantAttributes,
     getVariantOptions,
@@ -20,7 +21,7 @@ import {
     getProductStock,
     getProductImage,
     formatPrice,
-} from '@/utils/product';
+} = useProduct();
 
 const route         = useRoute();
 const productStore  = useProductStore();
@@ -152,15 +153,11 @@ const addToCart = async () => {
         return;
     }
 
-    try {
-        await cartStore.addToCart(
-            product.value,
-            quantity.value,
-            selectedVariant.value
-        );
-    } catch (error) {
-        console.error('Add to cart failed:', error);
-    }
+    await cartStore.addToCart(
+        product.value,
+        quantity.value,
+        selectedVariant.value
+    );
 };
 
 /**
@@ -183,18 +180,9 @@ watch(
             Loading product...
         </div>
 
-        <!-- Error -->
-        <div v-else-if="productStore.productError" class="error-state">
-            <p>{{ productStore.productError }}</p>
-
-            <button @click="loadProduct(route.params.id)">
-                Try again
-            </button>
-        </div>
-
         <!-- Product not found -->
         <div
-            v-else-if="productStore.productNotFound || !product"
+            v-else-if="productStore.productNotFound"
             class="empty-state"
         >
             <h2>Product not found</h2>
@@ -210,7 +198,7 @@ watch(
         </div>
 
         <!-- Product details -->
-        <template v-else>
+        <template v-else-if="product">
             <div class="breadcrumb">
                 <RouterLink to="/">Home</RouterLink> /
                 <RouterLink to="/products">Shop</RouterLink> /
@@ -312,7 +300,6 @@ watch(
                             View cart
                         </RouterLink>
                     </div>
-
                     <!-- Product details -->
                     <div style="margin-top: 30px">
                         <h3>Product details</h3>

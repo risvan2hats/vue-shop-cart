@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import authService from '@/services/authService';
+import { useErrorMessage } from '@/composables/useErrorMessage';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: JSON.parse(localStorage.getItem('auth_user') || 'null'),
         token: localStorage.getItem('auth_token') || null,
         loading: false,
-        error: null,
     }),
 
     getters: {
@@ -23,7 +23,6 @@ export const useAuthStore = defineStore('auth', {
          */
         async login(credentials) {
             this.loading = true;
-            this.error = null;
 
             try {
                 const response = await authService.login(credentials);
@@ -36,10 +35,8 @@ export const useAuthStore = defineStore('auth', {
 
                 return this.user;
             } catch (error) {
-                this.error = error.response?.data?.message
-                    || 'Invalid email or password. Please try again.';
-
-                throw error;
+                useErrorMessage(error, 'Unable to sign in. Check your details and try again.', 'Sign in');
+                return null;
             } finally {
                 this.loading = false;
             }
@@ -51,7 +48,6 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.user = null;
             this.token = null;
-            this.error = null;
 
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_token');

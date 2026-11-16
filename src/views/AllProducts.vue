@@ -192,10 +192,9 @@ onMounted(() => {
                     </span>
                 </div>
 
-                <ProductListing :products="productStore.products" :loading="productStore.loading"
-                    :error="productStore.error" @retry="fetchProducts(productStore.meta?.current_page || 1)" />
+                <ProductListing :products="productStore.products" :loading="productStore.loading" />
 
-                <div v-if="!productStore.loading && !productStore.error && productStore.meta?.last_page > 1"
+                <div v-if="!productStore.loading && productStore.meta?.last_page > 1"
                     class="actions pagination-actions">
                     <button class="button secondary" :disabled="productStore.meta.current_page === 1"
                         @click="changePage(productStore.meta.current_page - 1)">

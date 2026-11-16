@@ -3,17 +3,22 @@ import { defineStore } from 'pinia';
 import cartService from '@/services/cartService';
 import checkoutService from '@/services/checkoutService';
 
-import { getCurrentPrice } from '@/utils/product';
+import { useProduct } from '@/composables/useProduct';
+import { useErrorMessage } from '@/composables/useErrorMessage';
+
+const { getCurrentPrice } = useProduct();
+
+const taxRate = Number(import.meta.env.VITE_TAX_RATE ?? 0.08);
+const shipping = Number(import.meta.env.VITE_SHIPPING_COST ?? 5);
 
 export const useCartStore = defineStore('cart', {
     state: () => ({
         items: [],
         addingProductId: null,
         updatingItemId: null,
-        error: null,
         checkoutComplete: false,
-        taxRate: 0.08,
-        shipping: 5,
+        taxRate,
+        shipping,
     }),
 
     getters: {
@@ -38,8 +43,6 @@ export const useCartStore = defineStore('cart', {
          * Fetch the cart items from the server.
          */
         async fetchCart() {
-            this.error = null;
-
             try {
                 const response = await cartService.getCart();
                 const data = response.data?.data ?? response.data;
@@ -50,7 +53,7 @@ export const useCartStore = defineStore('cart', {
 
                 return this.items;
             } catch (error) {
-                console.error('Fetch cart failed:', error);
+                useErrorMessage(error, 'Unable to load your cart. Please try again.', 'Load cart');
             }
         },
 
@@ -63,7 +66,6 @@ export const useCartStore = defineStore('cart', {
             }
 
             this.addingProductId = product.id;
-            this.error = null;
 
             try {
                 const response = await cartService.addItem(
@@ -82,6 +84,8 @@ export const useCartStore = defineStore('cart', {
 
                 if (existingItem) {
                     existingItem.quantity += quantity;
+                    existingItem.product = product;
+                    existingItem.variant = variant;
                 } else {
                     this.items.push({
                         id: response.id || `${product.id}-${variant?.id || 'default'}`,
@@ -95,9 +99,8 @@ export const useCartStore = defineStore('cart', {
 
                 return response;
             } catch (error) {
-                this.error = error.response?.data?.message || 'Unable to add product to cart. Please try again.';
-
-                throw error;
+                useErrorMessage(error, 'Unable to add product to cart. Please try again.', 'Add to cart');
+                return false;
             } finally {
                 this.addingProductId = null;
             }
@@ -107,19 +110,16 @@ export const useCartStore = defineStore('cart', {
          * Remove an item from the cart.
          */
         async removeItem(cartItemId) {
-            this.error = null;
-
             try {
                 await cartService.removeItem(cartItemId);
 
                 this.items = this.items.filter(
                     (item) => String(item.id) !== String(cartItemId)
                 );
+                return true;
             } catch (error) {
-                this.error = error.response?.data?.message
-                    || 'Unable to remove item from cart. Please try again.';
-
-                throw error;
+                useErrorMessage(error, 'Unable to remove item from cart. Please try again.', 'Remove cart item');
+                return false;
             }
         },
 
@@ -132,20 +132,18 @@ export const useCartStore = defineStore('cart', {
             );
 
             if (!item || !Number.isInteger(quantity) || quantity < 1) {
-                return;
+                return false;
             }
 
-            this.error = null;
             this.updatingItemId = cartItemId;
 
             try {
                 await cartService.updateItem(cartItemId, quantity);
                 item.quantity = quantity;
+                return true;
             } catch (error) {
-                this.error = error.response?.data?.message
-                    || 'Unable to update item quantity. Please try again.';
-
-                throw error;
+                useErrorMessage(error, 'Unable to update item quantity. Please try again.', 'Update cart quantity');
+                return false;
             } finally {
                 this.updatingItemId = null;
             }
@@ -159,16 +157,14 @@ export const useCartStore = defineStore('cart', {
                 throw new Error('Your cart is empty.');
             }
 
-            this.error = null;
             try {
                 await checkoutService.clearCart();
                 this.items = [];
                 this.checkoutComplete = true;
+                return true;
             } catch (error) {
-                this.error = error.message
-                    || 'Unable to place your order. Please try again.';
-
-                throw error;
+                useErrorMessage(error, 'Unable to clear the cart. Please try again.', 'Clear cart');
+                return false;
             }
         },
     },

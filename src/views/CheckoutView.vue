@@ -3,12 +3,14 @@ import { computed, reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
-import { formatPrice } from '@/utils/product';
+import { useProduct } from '@/composables/useProduct';
+import { useErrorMessage } from '@/composables/useErrorMessage';
 import '../styles/pages/checkout.css';
 
 const cartStore = useCartStore();
 const authStore = useAuthStore();
 const router = useRouter();
+const { formatPrice } = useProduct();
 
 const user = authStore.user || {};
 const nameParts = (user.name || '').trim().split(/\s+/);
@@ -29,7 +31,6 @@ const form = reactive({
 });
 
 const submitting = ref(false);
-const submitError = ref('');
 
 const subtotal = computed(() => cartStore.totalAmount);
 
@@ -55,10 +56,8 @@ const getCurrentPrice = (product) => {
 };
 
 const placeOrder = async () => {
-    submitError.value = '';
-
     if (!cartStore.items.length) {
-        submitError.value = 'Your cart is empty.';
+        useErrorMessage(new Error('Your cart is empty.'), 'Unable to continue checkout.', 'Checkout');
         return;
     }
 
@@ -68,9 +67,7 @@ const placeOrder = async () => {
         await cartStore.clearCart();
         await router.push({ name: 'order-confirmation' });
     } catch (error) {
-        submitError.value = error.message
-            || error.response?.data?.message
-            || 'Unable to place your order. Please try again.';
+        useErrorMessage(error, 'Unable to clear the cart. Please try again.', 'Checkout');
     } finally {
         submitting.value = false;
     }
@@ -270,8 +267,6 @@ const placeOrder = async () => {
                     <span>Total</span>
                     <span>{{ formatPrice(total) }}</span>
                 </div>
-
-                <p v-if="submitError" class="error-state" role="alert">{{ submitError }}</p>
 
                 <button type="submit" class="checkout-place-order" :disabled="submitting || !cartStore.items.length">
                     {{

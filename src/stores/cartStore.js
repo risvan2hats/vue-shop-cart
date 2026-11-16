@@ -75,9 +75,9 @@ export const useCartStore = defineStore('cart', {
                 );
 
                 const existingItem = this.items.find((item) => {
-                    const sameProduct = String(item.product_id) === String(product.id);
-                    const existingVariantId = item.variant_id ?? item.variant?.id;
-                    const sameVariant = String(existingVariantId ?? '') === String(variant?.id ?? '');
+                    const sameProduct = String(item.product_id) === String(product.id)
+                    const existingVariantId = item.variant_id ?? item.variant?.id
+                    const sameVariant = String(existingVariantId ?? '') === String(variant?.id ?? '')
 
                     return sameProduct && sameVariant;
                 });
@@ -99,8 +99,8 @@ export const useCartStore = defineStore('cart', {
 
                 showToast('Added to cart.', 'success');
                 return response;
-            } catch {
-                showToast('Unable to add product to cart. Please try again.', 'error');
+            } catch (error) {
+                showToast(error.response?.data?.message || 'Unable to add product to cart. Please try again.', 'error');
                 return false;
             } finally {
                 this.addingProductId = null;

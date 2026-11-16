@@ -33,7 +33,7 @@ onMounted(() => {
                     <p>Thoughtfully picked essentials for your everyday routine. Explore the latest drops, trusted
                         favourites, and little upgrades that make a difference.</p>
                     <div class="actions">
-                        <RouterLink class="button" to="/products">Shop all products</RouterLink>
+                        <RouterLink class="button" to="/products">Shop all products abcd</RouterLink>
                         <RouterLink class="button secondary" :to="{ name: 'products', query: { sort: 'discount' } }">
                             Explore deals</RouterLink>
                     </div>

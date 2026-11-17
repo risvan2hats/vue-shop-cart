@@ -1,8 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { watch } from 'vue';
 
-import Header from '@/components/Header.vue';
-import Footer from '@/components/Footer.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import AppFooter from '@/components/AppFooter.vue';
 
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
@@ -12,29 +12,34 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 
 /**
- * Watch for authentication changes and fetch cart if authenticated
+ * Watch for authentication changes:
+ * - When authenticated: merge any guest cart items and fetch user's cart
+ * - When not authenticated: load stored guest cart items
  */
 watch(
-    () => authStore.isAuthenticated,
-    (isAuthenticated) => {
-        if (isAuthenticated) {
-            cartStore.fetchCart();
-        }
-    },
-    { immediate: true }
+  () => authStore.isAuthenticated,
+  async (isAuthenticated) => {
+    if (isAuthenticated) {
+      await cartStore.mergeGuestCart();
+    } else {
+      cartStore.loadGuestCart();
+    }
+  },
+  { immediate: true }
 );
 </script>
 
 <template>
+  <AppHeader />
 
-    <Header />
+  <RouterView />
 
-    <RouterView />
+  <div
+    v-if="toast.message"
+    :class="`app-toast app-toast--${toast.type}`"
+  >
+    {{ toast.message }}
+  </div>
 
-    <div v-if="toast.message" :class="`app-toast app-toast--${toast.type}`">
-        {{ toast.message }}
-    </div>
-
-    <Footer />
-
+  <AppFooter />
 </template>

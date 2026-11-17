@@ -1,10 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProduct } from '@/composables/useProduct';
 import { showToast } from '@/composables/showToast';
+interface CartItem {
+  id: number | string;
+  product_id: number;
+  quantity: number;
+  product?: {
+    id?: number;
+    title?: string;
+    selling_price?: number | string | null;
+    price?: number | string | null;
+  } | null;
+  variant_id?: number | null;
+  variant?: {
+    id?: number;
+    selling_price?: number | string | null;
+    price?: number | string | null;
+  } | null;
+}
 import '../styles/pages/checkout.css';
 
 const cartStore = useCartStore();
@@ -12,22 +29,22 @@ const authStore = useAuthStore();
 const router = useRouter();
 const { formatPrice } = useProduct();
 
-const user = authStore.user || {};
-const nameParts = (user.name || '').trim().split(/\s+/);
+const user = authStore.user;
+const nameParts = (user?.name || '').trim().split(/\s+/);
 
 const form = reactive({
-    email: user.email || '',
-    phone: user.phone || '',
-    firstName: nameParts[0] || '',
-    lastName: nameParts.slice(1).join(' '),
-    address: user.address || '',
-    address2: '',
-    city: '',
-    region: '',
-    postalCode: '',
-    country: '',
-    shipping: 'standard',
-    paymentMethod: 'cod',
+  email: user?.email || '',
+  phone: user?.phone || '',
+  firstName: nameParts[0] || '',
+  lastName: nameParts.slice(1).join(' '),
+  address: user?.address || '',
+  address2: '',
+  city: '',
+  region: '',
+  postalCode: '',
+  country: '',
+  shipping: 'standard',
+  paymentMethod: 'cod',
 });
 
 const submitting = ref(false);
@@ -35,257 +52,354 @@ const submitting = ref(false);
 const subtotal = computed(() => cartStore.totalAmount);
 
 const shippingCost = computed(() => {
-    return form.shipping === 'express' ? 12 : 5;
+  return form.shipping === 'express' ? 12 : 5;
 });
 
 const tax = computed(() => subtotal.value * cartStore.taxRate);
 
 const total = computed(() => {
-    return subtotal.value + tax.value + shippingCost.value;
+  return subtotal.value + tax.value + shippingCost.value;
 });
 
 /**
- * Get current price of a product
+ * Get current price of a cart item
  */
-const getCurrentPrice = (product) => {
-    return Number(
-        product.selling_price ??
-        product.price ??
-        0
-    );
+const getItemPrice = (item: CartItem) => {
+  return Number(
+    item?.variant?.selling_price ??
+    item?.variant?.price ??
+    item?.product?.selling_price ??
+    item?.product?.price ??
+    0
+  );
 };
 
 const placeOrder = async () => {
-    if (!cartStore.items.length) {
-        showToast('Your cart is empty.', 'error');
-        return;
-    }
+  if (!cartStore.items.length) {
+    showToast('Your cart is empty.', 'error');
+    return;
+  }
 
-    submitting.value = true;
+  submitting.value = true;
 
-    try {
-        const cleared = await cartStore.clearCart();
-        if (!cleared) return;
-        await router.push({ name: 'order-confirmation' });
-    } catch {
-        showToast('Unable to clear the cart. Please try again.', 'error');
-    } finally {
-        submitting.value = false;
-    }
+  try {
+    await cartStore.clearCart();
+    await router.push({ name: 'order-confirmation' });
+  } catch {
+    showToast('Unable to clear the cart. Please try again.', 'error');
+  } finally {
+    submitting.value = false;
+  }
 };
 </script>
 
 <template>
-    <main class="container">
-        <div class="page-title">
-            <div class="breadcrumb">
-                <RouterLink to="/">Home</RouterLink> /
-                <RouterLink to="/cart">Cart</RouterLink> /
-                Checkout
+  <main class="container">
+    <div class="page-title">
+      <div class="breadcrumb">
+        <RouterLink to="/">Home</RouterLink> /
+        <RouterLink to="/cart">Cart</RouterLink> /
+        Checkout
+      </div>
+
+      <div class="eyebrow">
+        Secure checkout
+      </div>
+      <h1>Complete your order</h1>
+      <p class="muted">
+        You're just a few details away from your order.
+      </p>
+    </div>
+
+    <div
+      v-if="!cartStore.items.length"
+      class="empty-state"
+    >
+      <h2>Your cart is empty</h2>
+      <p class="muted">
+        Add some products before proceeding to checkout.
+      </p>
+
+      <RouterLink
+        to="/products"
+        class="button"
+      >
+        Continue shopping
+      </RouterLink>
+    </div>
+
+    <form
+      v-else
+      class="checkout-grid"
+      @submit.prevent="placeOrder"
+    >
+      <div>
+        <!-- Contact information -->
+        <section class="form-card">
+          <h2>Contact information</h2>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="email">Email address *</label>
+              <input
+                id="email"
+                v-model.trim="form.email"
+                type="email"
+                autocomplete="email"
+                required
+                placeholder="you@example.com"
+              >
             </div>
 
-            <div class="eyebrow">Secure checkout</div>
-            <h1>Complete your order</h1>
-            <p class="muted">
-                You're just a few details away from your order.
-            </p>
-        </div>
+            <div class="field">
+              <label for="phone">Phone number *</label>
+              <input
+                id="phone"
+                v-model.trim="form.phone"
+                type="tel"
+                autocomplete="tel"
+                required
+                placeholder="Phone number"
+              >
+            </div>
+          </div>
+        </section>
 
-        <div v-if="!cartStore.items.length" class="empty-state">
-            <h2>Your cart is empty</h2>
-            <p class="muted">
-                Add some products before proceeding to checkout.
-            </p>
+        <!-- Shipping address -->
+        <section class="form-card">
+          <h2>Shipping address</h2>
 
-            <RouterLink to="/products" class="button">
-                Continue shopping
-            </RouterLink>
-        </div>
-
-        <form v-else class="checkout-grid" @submit.prevent="placeOrder">
-            <div>
-                <!-- Contact information -->
-                <section class="form-card">
-                    <h2>Contact information</h2>
-
-                    <div class="form-grid">
-                        <div class="field">
-                            <label for="email">Email address *</label>
-                            <input id="email" v-model.trim="form.email" type="email" autocomplete="email" required
-                                placeholder="you@example.com">
-                        </div>
-
-                        <div class="field">
-                            <label for="phone">Phone number *</label>
-                            <input id="phone" v-model.trim="form.phone" type="tel" autocomplete="tel" required
-                                placeholder="Phone number">
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Shipping address -->
-                <section class="form-card">
-                    <h2>Shipping address</h2>
-
-                    <div class="form-grid">
-                        <div class="field">
-                            <label for="firstName">First name *</label>
-                            <input id="firstName" v-model.trim="form.firstName" autocomplete="given-name" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="lastName">Last name *</label>
-                            <input id="lastName" v-model.trim="form.lastName" autocomplete="family-name" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label for="address">Street address *</label>
-                        <input id="address" v-model.trim="form.address" autocomplete="street-address" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="address2">Apartment, suite, etc.</label>
-                        <input id="address2" v-model.trim="form.address2" autocomplete="address-line2">
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="field">
-                            <label for="city">City *</label>
-                            <input id="city" v-model.trim="form.city" autocomplete="address-level2" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="region">State / Province *</label>
-                            <input id="region" v-model.trim="form.region" autocomplete="address-level1" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="postalCode">Postal code *</label>
-                            <input id="postalCode" v-model.trim="form.postalCode" autocomplete="postal-code" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="country">Country *</label>
-                            <select id="country" v-model="form.country" autocomplete="country-name" required>
-                                <option value="">Select country</option>
-                                <option value="India">India</option>
-                                <option value="United States">United States</option>
-                                <option value="United Kingdom">United Kingdom</option>
-                                <option value="Canada">Canada</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Shipping method -->
-                <section class="form-card">
-                    <h2>Shipping method</h2>
-
-                    <label class="radio-card">
-                        <input v-model="form.shipping" type="radio" value="standard">
-
-                        <span>
-                            <strong>Standard delivery</strong>
-                            <br>
-                            <span class="muted">
-                                3–5 business days · {{ formatPrice(5) }}
-                            </span>
-                        </span>
-                    </label>
-
-                    <label class="radio-card">
-                        <input v-model="form.shipping" type="radio" value="express">
-
-                        <span>
-                            <strong>Express delivery</strong>
-                            <br>
-                            <span class="muted">
-                                1–2 business days · {{ formatPrice(12) }}
-                            </span>
-                        </span>
-                    </label>
-                </section>
-
-                <!-- Payment method -->
-                <section class="form-card">
-                    <h2>Payment method</h2>
-
-                    <label class="radio-card">
-                        <input v-model="form.paymentMethod" type="radio" value="cod">
-
-                        <span>
-                            <strong>Cash on Delivery</strong>
-                            <br>
-                            <span class="muted">
-                                Pay when your order arrives.
-                            </span>
-                        </span>
-                    </label>
-
-                    <p class="muted">
-                        Online payment can be added later by integrating a
-                        payment gateway.
-                    </p>
-                </section>
+          <div class="form-grid">
+            <div class="field">
+              <label for="firstName">First name *</label>
+              <input
+                id="firstName"
+                v-model.trim="form.firstName"
+                autocomplete="given-name"
+                required
+              >
             </div>
 
-            <!-- Order summary -->
-            <aside class="summary">
-                <h2>Order summary</h2>
+            <div class="field">
+              <label for="lastName">Last name *</label>
+              <input
+                id="lastName"
+                v-model.trim="form.lastName"
+                autocomplete="family-name"
+                required
+              >
+            </div>
+          </div>
 
-                <div v-for="item in cartStore.items" :key="item.product_id" class="summary-line">
-                    <span>
-                        {{ item.product.title }} × {{ item.quantity }}
-                    </span>
+          <div class="field">
+            <label for="address">Street address *</label>
+            <input
+              id="address"
+              v-model.trim="form.address"
+              autocomplete="street-address"
+              required
+            >
+          </div>
 
-                    <strong>
-                        {{ formatPrice(getCurrentPrice(item.product) * item.quantity) }}
-                    </strong>
-                </div>
+          <div class="field">
+            <label for="address2">Apartment, suite, etc.</label>
+            <input
+              id="address2"
+              v-model.trim="form.address2"
+              autocomplete="address-line2"
+            >
+          </div>
 
-                <div class="summary-line">
-                    <span>Subtotal</span>
-                    <strong>{{ formatPrice(subtotal) }}</strong>
-                </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="city">City *</label>
+              <input
+                id="city"
+                v-model.trim="form.city"
+                autocomplete="address-level2"
+                required
+              >
+            </div>
 
-                <div class="summary-line">
-                    <span>Tax (8%)</span>
-                    <strong>{{ formatPrice(tax) }}</strong>
-                </div>
+            <div class="field">
+              <label for="region">State / Province *</label>
+              <input
+                id="region"
+                v-model.trim="form.region"
+                autocomplete="address-level1"
+                required
+              >
+            </div>
 
-                <div class="summary-line">
-                    <span>Shipping</span>
-                    <strong>{{ formatPrice(shippingCost) }}</strong>
-                </div>
+            <div class="field">
+              <label for="postalCode">Postal code *</label>
+              <input
+                id="postalCode"
+                v-model.trim="form.postalCode"
+                autocomplete="postal-code"
+                required
+              >
+            </div>
 
-                <div class="summary-line">
-                    <span>Discount</span>
-                    <strong>{{ formatPrice(0) }}</strong>
-                </div>
+            <div class="field">
+              <label for="country">Country *</label>
+              <select
+                id="country"
+                v-model="form.country"
+                autocomplete="country-name"
+                required
+              >
+                <option value="">
+                  Select country
+                </option>
+                <option value="India">
+                  India
+                </option>
+                <option value="United States">
+                  United States
+                </option>
+                <option value="United Kingdom">
+                  United Kingdom
+                </option>
+                <option value="Canada">
+                  Canada
+                </option>
+              </select>
+            </div>
+          </div>
+        </section>
 
-                <div class="summary-line summary-total">
-                    <span>Total</span>
-                    <span>{{ formatPrice(total) }}</span>
-                </div>
+        <!-- Shipping method -->
+        <section class="form-card">
+          <h2>Shipping method</h2>
 
-                <button type="submit" class="checkout-place-order" :disabled="submitting || !cartStore.items.length">
-                    {{
-                        submitting
-                            ? 'Processing...'
-                            : `Place order · ${formatPrice(total)}`
-                    }}
-                </button>
+          <label class="radio-card">
+            <input
+              v-model="form.shipping"
+              type="radio"
+              value="standard"
+            >
 
-                <p class="muted checkout-disclaimer">
-                    By placing your order, you agree to our terms and
-                    privacy policy.
-                </p>
+            <span>
+              <strong>Standard delivery</strong>
+              <br>
+              <span class="muted">
+                3–5 business days · {{ formatPrice(5) }}
+              </span>
+            </span>
+          </label>
 
-                <RouterLink to="/cart" class="muted">
-                    Return to cart
-                </RouterLink>
-            </aside>
-        </form>
-    </main>
+          <label class="radio-card">
+            <input
+              v-model="form.shipping"
+              type="radio"
+              value="express"
+            >
+
+            <span>
+              <strong>Express delivery</strong>
+              <br>
+              <span class="muted">
+                1–2 business days · {{ formatPrice(12) }}
+              </span>
+            </span>
+          </label>
+        </section>
+
+        <!-- Payment method -->
+        <section class="form-card">
+          <h2>Payment method</h2>
+
+          <label class="radio-card">
+            <input
+              v-model="form.paymentMethod"
+              type="radio"
+              value="cod"
+            >
+
+            <span>
+              <strong>Cash on Delivery</strong>
+              <br>
+              <span class="muted">
+                Pay when your order arrives.
+              </span>
+            </span>
+          </label>
+
+          <p class="muted">
+            Online payment can be added later by integrating a
+            payment gateway.
+          </p>
+        </section>
+      </div>
+
+      <!-- Order summary -->
+      <aside class="summary">
+        <h2>Order summary</h2>
+
+        <div
+          v-for="item in cartStore.items"
+          :key="item.id || `${item.product_id}-${item.variant_id}`"
+          class="summary-line"
+        >
+          <span>
+            {{ item.product?.title || 'Product' }} × {{ item.quantity }}
+          </span>
+
+          <strong>
+            {{ formatPrice(getItemPrice(item) * item.quantity) }}
+          </strong>
+        </div>
+
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <strong>{{ formatPrice(subtotal) }}</strong>
+        </div>
+
+        <div class="summary-line">
+          <span>Tax (8%)</span>
+          <strong>{{ formatPrice(tax) }}</strong>
+        </div>
+
+        <div class="summary-line">
+          <span>Shipping</span>
+          <strong>{{ formatPrice(shippingCost) }}</strong>
+        </div>
+
+        <div class="summary-line">
+          <span>Discount</span>
+          <strong>{{ formatPrice(0) }}</strong>
+        </div>
+
+        <div class="summary-line summary-total">
+          <span>Total</span>
+          <span>{{ formatPrice(total) }}</span>
+        </div>
+
+        <button
+          type="submit"
+          class="checkout-place-order"
+          :disabled="submitting || !cartStore.items.length"
+        >
+          {{
+            submitting
+              ? 'Processing...'
+              : `Place order · ${formatPrice(total)}`
+          }}
+        </button>
+
+        <p class="muted checkout-disclaimer">
+          By placing your order, you agree to our terms and
+          privacy policy.
+        </p>
+
+        <RouterLink
+          to="/cart"
+          class="muted"
+        >
+          Return to cart
+        </RouterLink>
+      </aside>
+    </form>
+  </main>
 </template>

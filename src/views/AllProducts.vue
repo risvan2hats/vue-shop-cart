@@ -1,6 +1,6 @@
-<script setup>
-import { onMounted, reactive, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+<script setup lang="ts">
+import { computed, onMounted, reactive, watch } from 'vue';
+import { useRoute, useRouter, type LocationQuery, type LocationQueryValue } from 'vue-router';
 
 import '@/styles/pages/products.css';
 
@@ -15,46 +15,61 @@ const router = useRouter();
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
 
+const queryString = (value?: LocationQueryValue | LocationQueryValue[]) => {
+  if (Array.isArray(value)) return value[0] || '';
+  return value || '';
+};
+
 const filters = reactive({
-    search: '',
-    category: route.query.category || '',
-    minPrice: '',
-    maxPrice: '',
-    inStock: false,
-    sort: route.query.sort || 'featured',
+  search: '',
+  category: queryString(route.query.category),
+  minPrice: '',
+  maxPrice: '',
+  inStock: false,
+  sort: queryString(route.query.sort) || 'featured',
+});
+
+const pagination = computed(() => {
+  const meta = productStore.meta;
+  if (!meta?.last_page || meta.last_page <= 1) return null;
+
+  return {
+    currentPage: meta.current_page || 1,
+    lastPage: meta.last_page,
+  };
 });
 
 /**
  * Fetch products using selected filters
  */
 const fetchProducts = (page = 1) => {
-    productStore.fetchProducts({
-        page,
-        per_page: 9,
-        search: filters.search || undefined,
-        category: filters.category || undefined,
-        min_price: filters.minPrice || undefined,
-        max_price: filters.maxPrice || undefined,
-        in_stock: filters.inStock ? 1 : undefined,
-        sort: filters.sort,
-    });
+  productStore.fetchProducts({
+    page,
+    per_page: 9,
+    search: filters.search || undefined,
+    category: filters.category || undefined,
+    min_price: filters.minPrice || undefined,
+    max_price: filters.maxPrice || undefined,
+    in_stock: filters.inStock ? 1 : undefined,
+    sort: filters.sort,
+  });
 };
 
 /**
  * Apply filters
  */
 const applyFilters = () => {
-    router.push({
-        name: 'products',
-        query: {
-            search: filters.search || undefined,
-            category: filters.category || undefined,
-            min_price: filters.minPrice || undefined,
-            max_price: filters.maxPrice || undefined,
-            in_stock: filters.inStock ? '1' : undefined,
-            sort: filters.sort === 'featured' ? undefined : filters.sort,
-        },
-    });
+  router.push({
+    name: 'products',
+    query: {
+      search: filters.search || undefined,
+      category: filters.category || undefined,
+      min_price: filters.minPrice || undefined,
+      max_price: filters.maxPrice || undefined,
+      in_stock: filters.inStock ? '1' : undefined,
+      sort: filters.sort === 'featured' ? undefined : filters.sort,
+    },
+  });
 };
 
 /**
@@ -63,155 +78,219 @@ const applyFilters = () => {
 /**
  * Change pagination page
  */
-const changePage = (page) => {
-    const lastPage = productStore.meta?.last_page || 1;
+const changePage = (page: number) => {
+  const lastPage = productStore.meta?.last_page || 1;
 
-    if (page < 1 || page > lastPage) {
-        return;
-    }
+  if (page < 1 || page > lastPage) {
+    return;
+  }
 
-    const query = { ...route.query };
+  const query: LocationQuery = { ...route.query };
 
-    if (page === 1) {
-        delete query.page;
-    } else {
-        query.page = page;
-    }
+  if (page === 1) {
+    delete query.page;
+  } else {
+    query.page = String(page);
+  }
 
-    router.push({
-        name: 'products',
-        query,
-    });
+  router.push({
+    name: 'products',
+    query,
+  });
 };
 
 /**
  * Update filters and products when URL changes
  */
 watch(
-    () => route.fullPath,
-    () => {
-        // Get filter values from URL
-        const query = route.query;
+  () => route.fullPath,
+  () => {
+    // Get filter values from URL
+    const query = route.query;
 
-        // Update selected filters
-        filters.search = String(query.search || '');
-        filters.category = String(query.category || '');
-        filters.minPrice = String(query.min_price || '');
-        filters.maxPrice = String(query.max_price || '');
-        filters.inStock = query.in_stock === '1';
-        filters.sort = String(query.sort || 'featured');
+    // Update selected filters
+    filters.search = queryString(query.search);
+    filters.category = queryString(query.category);
+    filters.minPrice = queryString(query.min_price);
+    filters.maxPrice = queryString(query.max_price);
+    filters.inStock = query.in_stock === '1';
+    filters.sort = queryString(query.sort) || 'featured';
 
-        // Fetch products for the current page
-        const page = Number(query.page) || 1;
-        fetchProducts(page);
-    },
-    { immediate: true },
+    // Fetch products for the current page
+    const page = Number(queryString(query.page)) || 1;
+    fetchProducts(page);
+  },
+  { immediate: true },
 );
 
 onMounted(() => {
-    categoryStore.fetchCategories();
+  categoryStore.fetchCategories();
 });
 </script>
 
 <template>
-    <main class="container">
-        <div class="page-title">
-            <div class="breadcrumb">
-                <RouterLink to="/">Home</RouterLink> / Shop
-            </div>
+  <main class="container">
+    <div class="page-title">
+      <div class="breadcrumb">
+        <RouterLink to="/">Home</RouterLink> / Shop
+      </div>
 
-            <div class="eyebrow">The collection</div>
-            <h1>All products</h1>
-            <p class="muted">Find your next everyday favourite.</p>
+      <div class="eyebrow">
+        The collection
+      </div>
+      <h1>All products</h1>
+      <p class="muted">
+        Find your next everyday favourite.
+      </p>
+    </div>
+
+    <div class="catalog-layout">
+      <aside class="filters">
+        <h3>Filters</h3>
+
+        <div class="filter-group">
+          <strong>Category</strong>
+
+          <select
+            v-model="filters.category"
+            class="form-control"
+            @change="applyFilters"
+          >
+            <option value="">
+              All categories
+            </option>
+
+            <option
+              v-for="category in categoryStore.categories"
+              :key="category.id"
+              :value="category.slug"
+            >
+              {{ category.name }}
+            </option>
+          </select>
         </div>
 
-        <div class="catalog-layout">
-            <aside class="filters">
-                <h3>Filters</h3>
+        <div class="filter-group">
+          <strong>Price range</strong>
 
-                <div class="filter-group">
-                    <strong>Category</strong>
+          <div class="field">
+            <label for="min-price">Minimum ($)</label>
+            <input
+              id="min-price"
+              v-model="filters.minPrice"
+              type="number"
+              min="0"
+              placeholder="0"
+              @change="applyFilters"
+              @keyup="applyFilters"
+            >
+          </div>
 
-                    <select class="form-control" v-model="filters.category" @change="applyFilters">
-                        <option value="">All categories</option>
-
-                        <option v-for="category in categoryStore.categories" :key="category.id" :value="category.slug">
-                            {{ category.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <strong>Price range</strong>
-
-                    <div class="field">
-                        <label for="min-price">Minimum ($)</label>
-                        <input id="min-price" v-model="filters.minPrice" type="number" min="0" placeholder="0"
-                            @change="applyFilters" @keyup="applyFilters">
-                    </div>
-
-                    <div class="field">
-                        <label for="max-price">Maximum ($)</label>
-                        <input id="max-price" v-model="filters.maxPrice" type="number" min="0" placeholder="500"
-                            @change="applyFilters" @keyup="applyFilters">
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <strong>Availability</strong>
-
-                    <label>
-                        <input v-model="filters.inStock" type="checkbox" @change="applyFilters">
-                        In stock only
-                    </label>
-                </div>
-            </aside>
-
-            <section>
-                <form class="toolbar" @submit.prevent="applyFilters">
-                    <input v-model="filters.search" type="search" placeholder="Search products..."
-                        aria-label="Search products">
-
-                    <select v-model="filters.sort" aria-label="Sort products" @change="applyFilters">
-                        <option value="featured">Featured</option>
-                        <option value="price-asc">Price: Low to high</option>
-                        <option value="price-desc">Price: High to low</option>
-                        <option value="discount">Discount</option>
-                    </select>
-                </form>
-
-                <div class="section-head">
-                    <span class="muted">
-                        Showing {{ productStore.products.length }}
-                        of {{ productStore.meta?.total || 0 }} products
-                    </span>
-
-                    <span class="muted">
-                        Page {{ productStore.meta?.current_page || 1 }}
-                        of {{ productStore.meta?.last_page || 1 }}
-                    </span>
-                </div>
-
-                <ProductListing :products="productStore.products" :loading="productStore.loading" />
-
-                <div v-if="!productStore.loading && productStore.meta?.last_page > 1"
-                    class="actions pagination-actions">
-                    <button class="button secondary" :disabled="productStore.meta.current_page === 1"
-                        @click="changePage(productStore.meta.current_page - 1)">
-                        Previous
-                    </button>
-
-                    <button class="button" disabled>
-                        {{ productStore.meta.current_page }}
-                    </button>
-
-                    <button class="button secondary"
-                        :disabled="productStore.meta.current_page === productStore.meta.last_page"
-                        @click="changePage(productStore.meta.current_page + 1)">
-                        Next
-                    </button>
-                </div>
-            </section>
+          <div class="field">
+            <label for="max-price">Maximum ($)</label>
+            <input
+              id="max-price"
+              v-model="filters.maxPrice"
+              type="number"
+              min="0"
+              placeholder="500"
+              @change="applyFilters"
+              @keyup="applyFilters"
+            >
+          </div>
         </div>
-    </main>
+
+        <div class="filter-group">
+          <strong>Availability</strong>
+
+          <label>
+            <input
+              v-model="filters.inStock"
+              type="checkbox"
+              @change="applyFilters"
+            >
+            In stock only
+          </label>
+        </div>
+      </aside>
+
+      <section>
+        <form
+          class="toolbar"
+          @submit.prevent="applyFilters"
+        >
+          <input
+            v-model="filters.search"
+            type="search"
+            placeholder="Search products..."
+            aria-label="Search products"
+          >
+
+          <select
+            v-model="filters.sort"
+            aria-label="Sort products"
+            @change="applyFilters"
+          >
+            <option value="featured">
+              Featured
+            </option>
+            <option value="price-asc">
+              Price: Low to high
+            </option>
+            <option value="price-desc">
+              Price: High to low
+            </option>
+            <option value="discount">
+              Discount
+            </option>
+          </select>
+        </form>
+
+        <div class="section-head">
+          <span class="muted">
+            Showing {{ productStore.products.length }}
+            of {{ productStore.meta?.total || 0 }} products
+          </span>
+
+          <span class="muted">
+            Page {{ productStore.meta?.current_page || 1 }}
+            of {{ productStore.meta?.last_page || 1 }}
+          </span>
+        </div>
+
+        <ProductListing
+          :products="productStore.products"
+          :loading="productStore.loading"
+        />
+
+        <div
+          v-if="!productStore.loading && pagination"
+          class="actions pagination-actions"
+        >
+          <button
+            class="button secondary"
+            :disabled="pagination.currentPage === 1"
+            @click="changePage(pagination.currentPage - 1)"
+          >
+            Previous
+          </button>
+
+          <button
+            class="button"
+            disabled
+          >
+            {{ pagination.currentPage }}
+          </button>
+
+          <button
+            class="button secondary"
+            :disabled="pagination.currentPage === pagination.lastPage"
+            @click="changePage(pagination.currentPage + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
 </template>

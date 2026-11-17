@@ -12,7 +12,6 @@ import { showToast } from '@/composables/showToast'
 
 // Re‑use product types from the product service (they match the composable types).
 import type { Product, ProductVariant } from '@/services/productService'
-import type { CartApiPayload } from '@/services/cartService'
 
 export interface CartItem {
   id: number | string
@@ -104,8 +103,8 @@ export const useCartStore = defineStore('cart', () => {
     if (!auth.isAuthenticated) return loadGuestCart()
     try {
       const resp = await cartService.getCart()
-      const payload = (resp as CartApiPayload).items ?? (resp as CartApiPayload).data ?? []
-      items.value = (payload as CartItem[]).map(normalizeItem)
+      const payload = (resp.data as any)?.items ?? resp.data ?? []
+      items.value = (payload as any[]).map(normalizeItem)
     } catch (e) {
       if (getApiErrorStatus(e) === 401) return loadGuestCart()
       showToast('Unable to load your cart. Please try again.', 'error')
@@ -131,7 +130,7 @@ export const useCartStore = defineStore('cart', () => {
         const { productId, variantId, qty } = merged[k]
         try {
           await cartService.addItem(productId, qty, variantId)
-        } catch {
+       } catch {
           showToast('Unable to merge cart.', 'error')
         }
       }

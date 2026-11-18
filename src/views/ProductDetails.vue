@@ -130,10 +130,16 @@ const loadProduct = (id: string | string[]) => {
   productStore.fetchProduct(productId);
 };
 
+const siteTitle = (import.meta.env.VITE_SITE_TITLE as string | undefined) || 'Northstar';
+
 /**
- * Set default variant attributes when product changes.
+ * Set default variant attributes and dynamic document title when product changes.
  */
-watch(product, () => {
+watch(product, (currentProduct) => {
+  if (currentProduct?.title) {
+    document.title = `${currentProduct.title} | ${siteTitle}`;
+  }
+
   selectedAttributes.value = {
     ...(activeVariants.value[0]?.attributes || {}),
   };

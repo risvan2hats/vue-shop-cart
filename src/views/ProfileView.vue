@@ -22,35 +22,68 @@ onMounted(() => {
       </p>
     </div>
 
-    <div
-      v-if="authStore.profileLoading"
-      class="loading-state"
-      role="status"
-      aria-busy="true"
-    >
-      Loading profile...
-    </div>
-
     <section
-      v-else-if="authStore.user"
+      v-if="authStore.user || authStore.profileLoading"
       class="profile-card"
+      :aria-busy="authStore.profileLoading"
+      :role="authStore.profileLoading ? 'status' : undefined"
     >
       <dl>
         <div>
           <dt>Name</dt>
-          <dd>{{ authStore.user.name }}</dd>
+          <dd>
+            <span
+              v-if="authStore.profileLoading"
+              class="skeleton profile-skeleton-value"
+              style="width: 180px;"
+              aria-label="Loading name"
+            />
+            <template v-else>
+              {{ authStore.user?.name }}
+            </template>
+          </dd>
         </div>
         <div>
           <dt>Email</dt>
-          <dd>{{ authStore.user.email }}</dd>
+          <dd>
+            <span
+              v-if="authStore.profileLoading"
+              class="skeleton profile-skeleton-value"
+              style="width: 240px;"
+              aria-label="Loading email"
+            />
+            <template v-else>
+              {{ authStore.user?.email }}
+            </template>
+          </dd>
         </div>
         <div>
           <dt>Phone</dt>
-          <dd>{{ authStore.user.phone || 'Not provided' }}</dd>
+          <dd>
+            <span
+              v-if="authStore.profileLoading"
+              class="skeleton profile-skeleton-value"
+              style="width: 140px;"
+              aria-label="Loading phone"
+            />
+            <template v-else>
+              {{ authStore.user?.phone || 'Not provided' }}
+            </template>
+          </dd>
         </div>
         <div>
           <dt>Address</dt>
-          <dd>{{ authStore.user.address || 'Not provided' }}</dd>
+          <dd>
+            <span
+              v-if="authStore.profileLoading"
+              class="skeleton profile-skeleton-value"
+              style="width: 280px;"
+              aria-label="Loading address"
+            />
+            <template v-else>
+              {{ authStore.user?.address || 'Not provided' }}
+            </template>
+          </dd>
         </div>
       </dl>
     </section>

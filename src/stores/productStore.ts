@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import productService, { type PaginationMeta, type Product, type ProductQuery } from '@/services/productService'
+import productService from '@/services/productService'
+import type { PaginationMeta, Product, ProductQuery } from '@/types/productTypes'
 import { getApiErrorStatus } from '@/services/api'
 import { showToast } from '@/composables/showToast'
 

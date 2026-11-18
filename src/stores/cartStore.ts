@@ -10,18 +10,10 @@ import { useProductStore } from '@/stores/productStore'
 import { useProduct } from '@/composables/useProduct'
 import { showToast } from '@/composables/showToast'
 
-// Re‑use product types from the product service (they match the composable types).
-import type { Product, ProductVariant } from '@/services/productService'
-
-export interface CartItem {
-  id: number | string
-  product_id: number
-  quantity: number
-  // Optional full objects for backward‑compatible UI components.
-  product?: Product | null
-  variant_id?: number | null
-  variant?: ProductVariant | null
-}
+// Shared types
+import type { Product, ProductVariant } from '@/types/productTypes'
+import type { CartItem } from '@/types/cartTypes'
+import type { CartApiPayload } from '@/services/cartService'
 
 const GUEST_CART_STORAGE_KEY = 'guest_cart'
 
@@ -103,8 +95,9 @@ export const useCartStore = defineStore('cart', () => {
     if (!auth.isAuthenticated) return loadGuestCart()
     try {
       const resp = await cartService.getCart()
-      const payload = (resp.data as any)?.items ?? resp.data ?? []
-      items.value = (payload as any[]).map(normalizeItem)
+      const respTyped = resp as unknown as CartApiPayload
+      const payload = respTyped.items ?? respTyped.data ?? []
+      items.value = (payload as CartItem[]).map(normalizeItem)
     } catch (e) {
       if (getApiErrorStatus(e) === 401) return loadGuestCart()
       showToast('Unable to load your cart. Please try again.', 'error')

@@ -3,31 +3,7 @@ import { reactive, watch } from 'vue';
 
 import { useCartStore } from '@/stores/cartStore';
 import { useProduct } from '@/composables/useProduct';
-type AttributeMap = Record<string, string | number>;
-
-interface ProductVariant {
-  id: number;
-  is_active?: boolean;
-  attributes?: AttributeMap;
-  selling_price?: number | string | null;
-  price?: number | string | null;
-  stock?: number | string | null;
-}
-
-interface Product {
-  id: number;
-  title: string;
-  description?: string;
-  sku?: string | null;
-  image_url?: string | null;
-  image?: string | null;
-  selling_price?: number | string | null;
-  price?: number | string | null;
-  stock?: number | string | null;
-  category_id?: number;
-  category?: { id: number; name: string; slug?: string } | null;
-  variants?: ProductVariant[];
-}
+import type { Product, AttributeMap } from '@/types/productTypes';
 
 const props = withDefaults(defineProps<{
   products?: Product[];

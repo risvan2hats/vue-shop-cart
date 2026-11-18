@@ -3,29 +3,7 @@ import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useProduct } from '@/composables/useProduct';
-interface CartItem {
-    id: number | string;
-    product_id: number;
-    quantity: number;
-    product?: {
-        id?: number;
-        title?: string;
-        image_url?: string | null;
-        image?: string | null;
-        selling_price?: number | string | null;
-        price?: number | string | null;
-        stock?: number | string | null;
-        category?: { name?: string } | null;
-    } | null;
-    variant_id?: number | null;
-    variant?: {
-        id?: number;
-        selling_price?: number | string | null;
-        price?: number | string | null;
-        stock?: number | string | null;
-        attributes?: Record<string, string | number>;
-    } | null;
-}
+import type { CartItem } from '@/types/cartTypes';
 
 import '../styles/pages/cart.css';
 
@@ -202,7 +180,7 @@ const removeItem = async (cartItemId: number | string) => {
                 class="remove-link"
                 @click="removeItem(item.id)"
               >
-                Remove
+                {{ cartStore.removeItemLoading ? 'Removing...' : 'Remove' }}
               </button>
             </p>
           </div>

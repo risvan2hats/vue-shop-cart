@@ -8,8 +8,7 @@ import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import ProductListing from '@/components/ProductListing.vue';
 import { useProduct } from '@/composables/useProduct';
-type AttributeValue = string | number;
-type AttributeMap = Record<string, AttributeValue>;
+import type { AttributeMap } from '@/types/productTypes';
 
 const {
   getActiveVariants,

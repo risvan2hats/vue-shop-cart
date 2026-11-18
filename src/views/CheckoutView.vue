@@ -1,27 +1,11 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProduct } from '@/composables/useProduct';
 import { showToast } from '@/composables/showToast';
-interface CartItem {
-  id: number | string;
-  product_id: number;
-  quantity: number;
-  product?: {
-    id?: number;
-    title?: string;
-    selling_price?: number | string | null;
-    price?: number | string | null;
-  } | null;
-  variant_id?: number | null;
-  variant?: {
-    id?: number;
-    selling_price?: number | string | null;
-    price?: number | string | null;
-  } | null;
-}
+import type { CartItem } from '@/types/cartTypes';
 import '../styles/pages/checkout.css';
 
 const cartStore = useCartStore();
@@ -74,6 +58,10 @@ const getItemPrice = (item: CartItem) => {
   );
 };
 
+onMounted(() => {
+  cartStore.checkoutComplete = false;
+});
+
 const placeOrder = async () => {
   if (!cartStore.items.length) {
     showToast('Your cart is empty.', 'error');
@@ -86,7 +74,7 @@ const placeOrder = async () => {
     await cartStore.clearCart();
     await router.push({ name: 'order-confirmation' });
   } catch {
-    showToast('Unable to clear the cart. Please try again.', 'error');
+    showToast('Unable to place order. Please try again.', 'error');
   } finally {
     submitting.value = false;
   }

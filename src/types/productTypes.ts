@@ -1,9 +1,12 @@
 // Centralised product‑related type definitions
 
+export type AttributeValue = string | number
+export type AttributeMap = Record<string, AttributeValue>
+
 export interface ProductVariant {
   id: number
   is_active?: boolean
-  attributes?: Record<string, string | number>
+  attributes?: AttributeMap
   selling_price?: number | string | null
   price?: number | string | null
   stock?: number | string | null

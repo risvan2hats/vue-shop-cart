@@ -1,28 +1,4 @@
-export type AttributeValue = string | number
-export type AttributeMap = Record<string, AttributeValue>
-
-export interface ProductVariant {
-  id: number
-  is_active?: boolean
-  attributes?: AttributeMap
-  selling_price?: number | string | null
-  price?: number | string | null
-  stock?: number | string | null
-}
-
-export interface Product {
-  id: number
-  title?: string
-  description?: string
-  sku?: string | null
-  image_url?: string | null
-  image?: string | null
-  selling_price?: number | string | null
-  price?: number | string | null
-  stock?: number | string | null
-  category_id?: number
-  variants?: ProductVariant[]
-}
+import type { Product, ProductVariant, AttributeMap } from '@/types/productTypes'
 
 /**
  * Shared product and pricing helpers.

@@ -28,7 +28,7 @@ const handleLogout = () => {
           to="/cart"
           class="cart-link"
         >
-          Cart ({{ cartStore.totalItems }})
+          Cart ({{ cartStore.totalQuantity }})
         </RouterLink>
         <template v-if="authStore.isAuthenticated">
           <RouterLink to="/profile">Profile</RouterLink>

@@ -178,9 +178,10 @@ const removeItem = async (cartItemId: number | string) => {
               <button
                 type="button"
                 class="remove-link"
+                :disabled="cartStore.removingItemId === item.id"
                 @click="removeItem(item.id)"
               >
-                {{ cartStore.removeItemLoading ? 'Removing...' : 'Remove' }}
+                {{ cartStore.removingItemId === item.id ? 'Removing...' : 'Remove' }}
               </button>
             </p>
           </div>

@@ -71,7 +71,7 @@ export const useCartStore = defineStore('cart', {
     mergePromise: null as Promise<void> | null,
     taxRate: Number(import.meta.env.VITE_TAX_RATE ?? 0.08),
     shipping: Number(import.meta.env.VITE_SHIPPING_COST ?? 5),
-    removeItemLoading: false
+    removingItemId: null as number | string | null
   }),
 
   // ---- Getters ----------------------------------------------------------
@@ -229,8 +229,8 @@ export const useCartStore = defineStore('cart', {
 
     /** Remove a cart line by id. */
     async removeItem(id: number | string) {
+      this.removingItemId = id;
       try {
-        this.removeItemLoading = true;
         if (isAuth()) {
           await cartService.removeItem(id);
           await this.fetchCart();
@@ -244,7 +244,7 @@ export const useCartStore = defineStore('cart', {
         showToast('Unable to remove item from cart.', 'error');
         return false;
       } finally {
-        this.removeItemLoading = false;
+        this.removingItemId = null;
       }
     },
 

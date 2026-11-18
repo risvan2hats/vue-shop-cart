@@ -1,5 +1,5 @@
 // Shared cart‑related types
-import type { Product, ProductVariant } from "@/services/productService";
+import type { Product, ProductVariant } from './productTypes';
 
 /** Cart item shape – reused across the app */
 export interface CartItem {

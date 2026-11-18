@@ -130,7 +130,7 @@ const loadProduct = (id: string | string[]) => {
   productStore.fetchProduct(productId);
 };
 
-const siteTitle = (import.meta.env.VITE_SITE_TITLE as string | undefined) || 'Northstar';
+const siteTitle = (import.meta.env.VITE_SITE_TITLE as string | undefined) || '';
 
 /**
  * Set default variant attributes and dynamic document title when product changes.

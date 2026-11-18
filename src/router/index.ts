@@ -85,7 +85,8 @@ router.beforeEach((to) => {
   }
 });
 
-const defaultTitle = (import.meta.env.VITE_SITE_TITLE as string | undefined) || 'Northstar'
+const defaultTitle =
+  (import.meta.env.VITE_SITE_TITLE as string | undefined) || "";
 
 router.afterEach((to) => {
   document.title = to.meta.title

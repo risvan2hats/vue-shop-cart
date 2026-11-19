@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import authService, { type LoginCredentials, type User } from '@/services/authService'
+import authService from '@/services/authService'
+import type { LoginCredentials, User } from '@/types/authTypes'
 import { useCartStore } from '@/stores/cartStore'
 import { showToast } from '@/composables/showToast'
 

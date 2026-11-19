@@ -11,3 +11,9 @@ export interface CartItem {
   variant_id?: number | null;
   variant?: ProductVariant | null;
 }
+
+export interface CartApiPayload {
+  data?: CartApiPayload | CartItem[]
+  items?: CartItem[]
+  id?: number | string
+}

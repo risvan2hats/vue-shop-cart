@@ -23,10 +23,16 @@ const queryString = (value?: LocationQueryValue | LocationQueryValue[]) => {
 const filters = reactive({
   search: '',
   category: queryString(route.query.category),
+  subCategory: queryString(route.query.sub_category),
   minPrice: '',
   maxPrice: '',
   inStock: false,
   sort: queryString(route.query.sort) || 'featured',
+});
+
+const availableSubCategories = computed(() => {
+  const category = categoryStore.categories.find((item) => item.slug === filters.category);
+  return category ? categoryStore.subCategoriesForCategory(category.id) : [];
 });
 
 const pagination = computed(() => {
@@ -48,6 +54,7 @@ const fetchProducts = (page = 1) => {
     per_page: 9,
     search: filters.search || undefined,
     category: filters.category || undefined,
+    sub_category: filters.subCategory || undefined,
     min_price: filters.minPrice || undefined,
     max_price: filters.maxPrice || undefined,
     in_stock: filters.inStock ? 1 : undefined,
@@ -64,12 +71,18 @@ const applyFilters = () => {
     query: {
       search: filters.search || undefined,
       category: filters.category || undefined,
+      sub_category: filters.subCategory || undefined,
       min_price: filters.minPrice || undefined,
       max_price: filters.maxPrice || undefined,
       in_stock: filters.inStock ? '1' : undefined,
       sort: filters.sort === 'featured' ? undefined : filters.sort,
     },
   });
+};
+
+const onCategoryChange = () => {
+  filters.subCategory = '';
+  applyFilters();
 };
 
 /**
@@ -111,6 +124,7 @@ watch(
     // Update selected filters
     filters.search = queryString(query.search);
     filters.category = queryString(query.category);
+    filters.subCategory = queryString(query.sub_category);
     filters.minPrice = queryString(query.min_price);
     filters.maxPrice = queryString(query.max_price);
     filters.inStock = query.in_stock === '1';
@@ -124,7 +138,13 @@ watch(
 );
 
 onMounted(() => {
-  categoryStore.fetchCategories();
+  if (!categoryStore.categories.length) {
+    categoryStore.fetchCategories();
+  }
+
+  if (!categoryStore.subCategories.length) {
+    categoryStore.fetchSubCategories();
+  }
 });
 </script>
 
@@ -154,7 +174,7 @@ onMounted(() => {
           <select
             v-model="filters.category"
             class="form-control"
-            @change="applyFilters"
+            @change="onCategoryChange"
           >
             <option value="">
               All categories
@@ -166,6 +186,32 @@ onMounted(() => {
               :value="category.slug"
             >
               {{ category.name }}
+            </option>
+          </select>
+        </div>
+
+        <div
+          v-if="filters.category"
+          class="filter-group"
+        >
+          <strong>Subcategory</strong>
+
+          <select
+            v-model="filters.subCategory"
+            class="form-control"
+            :disabled="categoryStore.subCategoriesLoading || !availableSubCategories.length"
+            @change="applyFilters"
+          >
+            <option value="">
+              {{ categoryStore.subCategoriesLoading ? 'Loading subcategories...' : 'All subcategories' }}
+            </option>
+
+            <option
+              v-for="subCategory in availableSubCategories"
+              :key="subCategory.id"
+              :value="subCategory.slug"
+            >
+              {{ subCategory.name }}
             </option>
           </select>
         </div>

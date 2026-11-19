@@ -1,27 +1,5 @@
 import api from './api'
-
-export interface User {
-  id?: number
-  name?: string
-  email?: string
-  phone?: string | null
-  address?: string | null
-}
-
-export interface AuthSession {
-  user: User
-  token: string
-}
-
-export interface LoginCredentials {
-  email: string
-  password: string
-}
-
-export interface ApiEnvelope<T> {
-  data: T
-  message?: string
-}
+import type { ApiEnvelope, AuthSession, LoginCredentials, User } from '@/types/authTypes'
 
 /**
  * Authentication service for handling user login and authentication-related API calls.

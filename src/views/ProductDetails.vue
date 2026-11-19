@@ -356,6 +356,10 @@ watch(
               {{ product.category?.name || 'General' }}
               <br>
 
+              <strong>Subcategory:</strong>
+              {{ product.sub_category?.name || 'N/A' }}
+              <br>
+
               <strong>SKU:</strong>
               {{ product.sku || 'N/A' }}
               <br>

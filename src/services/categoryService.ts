@@ -1,24 +1,10 @@
 import api from './api'
-
-export interface ProductCategory {
-  id: number
-  name: string
-  slug: string
-}
-
-export interface CategoryQuery {
-  [key: string]: string | number | boolean | undefined
-}
-
-export interface Paginated<T> {
-  data: T[]
-  meta?: {
-    current_page?: number
-    last_page?: number
-    per_page?: number
-    total?: number
-  } | null
-}
+import type {
+  CategoryQuery,
+  Paginated,
+  ProductCategory,
+  ProductSubCategory,
+} from '@/types/productTypes'
 
 const categoryService = {
   /**
@@ -26,6 +12,17 @@ const categoryService = {
    */
   async getCategories(params: CategoryQuery = {}) {
     const response = await api.get<Paginated<ProductCategory>>('/categories', {
+      params,
+    })
+
+    return response.data
+  },
+
+  /**
+   * Fetch sub-categories
+   */
+  async getSubCategories(params: CategoryQuery = {}) {
+    const response = await api.get<{ data: ProductSubCategory[] }>('/sub-categories', {
       params,
     })
 

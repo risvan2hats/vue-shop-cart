@@ -1,38 +1,5 @@
 import api from './api'
-
-export interface CartItemProduct {
-  id: number
-  title: string
-  image_url?: string | null
-  image?: string | null
-  selling_price?: number | string | null
-  price?: number | string | null
-  stock?: number | string | null
-  category?: { id?: number; name?: string } | null
-}
-
-export interface CartItemVariant {
-  id: number
-  stock?: number | string | null
-  price?: number | string | null
-  selling_price?: number | string | null
-  attributes?: Record<string, string | number>
-}
-
-export interface CartItem {
-  id: number | string
-  product_id: number
-  quantity: number
-  product?: CartItemProduct | null
-  variant_id?: number | null
-  variant?: CartItemVariant | null
-}
-
-export interface CartApiPayload {
-  data?: CartApiPayload | CartItem[]
-  items?: CartItem[]
-  id?: number | string
-}
+import type { CartApiPayload } from '@/types/cartTypes'
 
 /**
  * Cart service for managing cart operations

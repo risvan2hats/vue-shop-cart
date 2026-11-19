@@ -18,6 +18,13 @@ export interface ProductCategory {
   slug?: string
 }
 
+export interface ProductSubCategory {
+  id: number
+  category_id: number
+  name: string
+  slug: string
+}
+
 export interface Product {
   id: number
   title: string
@@ -30,6 +37,8 @@ export interface Product {
   stock?: number | string | null
   category_id?: number
   category?: ProductCategory | null
+  sub_category_id?: number | null
+  sub_category?: ProductSubCategory | null
   variants?: ProductVariant[]
 }
 
@@ -50,8 +59,13 @@ export interface ProductQuery {
   per_page?: number
   search?: string
   category?: string
+  sub_category?: string
   min_price?: string | number
   max_price?: string | number
   in_stock?: number
   sort?: string
+}
+
+export interface CategoryQuery {
+  [key: string]: string | number | boolean | undefined
 }

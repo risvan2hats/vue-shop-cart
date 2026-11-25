@@ -189,7 +189,7 @@ watch(
       v-if="productStore.productLoading"
       class="detail-grid"
       role="status"
-      aria-label="Loading product"
+      :aria-label="$t('loading_product')"
       aria-busy="true"
     >
       <div
@@ -211,26 +211,25 @@ watch(
       v-else-if="productStore.productNotFound"
       class="empty-state"
     >
-      <h2>Product not found</h2>
+      <h2>{{ $t('product_not_found') }}</h2>
 
       <p>
-        Sorry, we couldn't find the product you're looking for.
-        It may have been removed or is no longer available.
+        {{ $t('product_not_found_desc') }}
       </p>
 
       <RouterLink
         class="button"
         to="/products"
       >
-        Back to shop
+        {{ $t('back_to_shop') }}
       </RouterLink>
     </div>
 
     <!-- Product details -->
     <template v-else-if="product">
       <div class="breadcrumb">
-        <RouterLink to="/">Home</RouterLink> /
-        <RouterLink to="/products">Shop</RouterLink> /
+        <RouterLink to="/">{{ $t('home') }}</RouterLink> /
+        <RouterLink to="/products">{{ $t('shop') }}</RouterLink> /
         {{ product.title }}
       </div>
 
@@ -249,7 +248,7 @@ watch(
           <span
             v-if="discounted"
             class="tag"
-          >SALE</span>
+          >{{ $t('sale') }}</span>
 
           <div
             class="eyebrow"
@@ -277,11 +276,11 @@ watch(
 
           <p class="stock">
             <template v-if="currentStock > 0">
-              ✓ In stock · {{ currentStock }} available
+              {{ $t('in_stock_available', { count: currentStock }) }}
             </template>
 
             <template v-else>
-              Currently out of stock
+              {{ $t('currently_out_of_stock') }}
             </template>
           </p>
 
@@ -313,7 +312,7 @@ watch(
 
           <!-- Quantity -->
           <div class="field">
-            <label for="quantity">Quantity</label>
+            <label for="quantity">{{ $t('quantity') }}</label>
 
             <input
               id="quantity"
@@ -333,39 +332,39 @@ watch(
               :disabled="!canAddToCart"
               @click="addToCart"
             >
-              {{ isAddingToCart ? 'Adding...' : 'Add to cart' }}
+              {{ isAddingToCart ? $t('adding') : $t('add_to_cart') }}
             </button>
 
             <RouterLink
               class="button secondary"
               to="/cart"
             >
-              View cart
+              {{ $t('view_cart') }}
             </RouterLink>
           </div>
           <!-- Product details -->
           <div style="margin-top: 30px">
-            <h3>Product details</h3>
+            <h3>{{ $t('product_details') }}</h3>
 
             <p class="muted">
               {{ product.description }}
             </p>
 
             <p>
-              <strong>Category:</strong>
-              {{ product.category?.name || 'General' }}
+              <strong>{{ $t('category_label') }}:</strong>
+              {{ product.category?.name || $t('general') }}
               <br>
 
-              <strong>Subcategory:</strong>
-              {{ product.sub_category?.name || 'N/A' }}
+              <strong>{{ $t('subcategory_label') }}:</strong>
+              {{ product.sub_category?.name || $t('not_applicable') }}
               <br>
 
-              <strong>SKU:</strong>
-              {{ product.sku || 'N/A' }}
+              <strong>{{ $t('sku_label') }}:</strong>
+              {{ product.sku || $t('not_applicable') }}
               <br>
 
-              <strong>Availability:</strong>
-              {{ currentStock > 0 ? 'In stock' : 'Out of stock' }}
+              <strong>{{ $t('availability_label') }}:</strong>
+              {{ currentStock > 0 ? $t('in_stock') : $t('out_of_stock') }}
             </p>
           </div>
         </section>
@@ -379,9 +378,9 @@ watch(
         <div class="section-head">
           <div>
             <div class="eyebrow">
-              You may also like
+              {{ $t('you_may_also_like') }}
             </div>
-            <h2>Related products</h2>
+            <h2>{{ $t('related_products') }}</h2>
           </div>
 
           <RouterLink
@@ -390,7 +389,7 @@ watch(
               query: { category: product.category?.slug }
             }"
           >
-            View all →
+            {{ $t('view_all') }} →
           </RouterLink>
         </div>
 

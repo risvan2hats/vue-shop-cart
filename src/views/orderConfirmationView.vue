@@ -18,27 +18,27 @@ const cartStore = useCartStore();
         ✓
       </div>
       <div class="eyebrow">
-        Order confirmed
+        {{ $t('order_confirmed') }}
       </div>
-      <h1>Thank you for your order!</h1>
+      <h1>{{ $t('thank_you_for_order') }}</h1>
       <RouterLink
         class="button"
         to="/products"
-      >Continue shopping</RouterLink>
+      >{{ $t('continue_shopping') }}</RouterLink>
     </section>
 
     <section
       v-else
       class="empty-state"
     >
-      <h1>Order details unavailable</h1>
+      <h1>{{ $t('order_details_unavailable') }}</h1>
       <p class="muted">
-        Place an order to view its confirmation.
+        {{ $t('order_details_unavailable_desc') }}
       </p>
       <RouterLink
         class="button"
         to="/cart"
-      >Return to cart</RouterLink>
+      >{{ $t('return_to_cart') }}</RouterLink>
     </section>
   </main>
 </template>

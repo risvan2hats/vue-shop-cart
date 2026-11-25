@@ -20,9 +20,17 @@ export const useProductStore = defineStore('product', {
     selectedProduct: null as Product | null,
     productLoading: false,
     productNotFound: false,
+
+    locale: localStorage.getItem('language') || 'en',
   }),
 
   actions: {
+    setLocale(locale: string) {
+      this.locale = locale
+      localStorage.setItem('language', locale)
+      document.documentElement.lang = locale
+    },
+
     /**
      * Fetch products from the API with optional query parameters.
      */

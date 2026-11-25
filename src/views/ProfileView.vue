@@ -14,11 +14,11 @@ onMounted(() => {
   <main class="container section">
     <div class="page-title">
       <div class="eyebrow">
-        Your account
+        {{ $t('your_account') }}
       </div>
-      <h1>Profile</h1>
+      <h1>{{ $t('profile') }}</h1>
       <p class="muted">
-        Your personal information.
+        {{ $t('personal_information') }}
       </p>
     </div>
 
@@ -30,13 +30,13 @@ onMounted(() => {
     >
       <dl>
         <div>
-          <dt>Name</dt>
+          <dt>{{ $t('name') }}</dt>
           <dd>
             <span
               v-if="authStore.profileLoading"
               class="skeleton profile-skeleton-value"
               style="width: 180px;"
-              aria-label="Loading name"
+              :aria-label="$t('loading_name')"
             />
             <template v-else>
               {{ authStore.user?.name }}
@@ -44,13 +44,13 @@ onMounted(() => {
           </dd>
         </div>
         <div>
-          <dt>Email</dt>
+          <dt>{{ $t('email') }}</dt>
           <dd>
             <span
               v-if="authStore.profileLoading"
               class="skeleton profile-skeleton-value"
               style="width: 240px;"
-              aria-label="Loading email"
+              :aria-label="$t('loading_email')"
             />
             <template v-else>
               {{ authStore.user?.email }}
@@ -58,30 +58,30 @@ onMounted(() => {
           </dd>
         </div>
         <div>
-          <dt>Phone</dt>
+          <dt>{{ $t('phone') }}</dt>
           <dd>
             <span
               v-if="authStore.profileLoading"
               class="skeleton profile-skeleton-value"
               style="width: 140px;"
-              aria-label="Loading phone"
+              :aria-label="$t('loading_phone')"
             />
             <template v-else>
-              {{ authStore.user?.phone || 'Not provided' }}
+              {{ authStore.user?.phone || $t('not_provided') }}
             </template>
           </dd>
         </div>
         <div>
-          <dt>Address</dt>
+          <dt>{{ $t('address') }}</dt>
           <dd>
             <span
               v-if="authStore.profileLoading"
               class="skeleton profile-skeleton-value"
               style="width: 280px;"
-              aria-label="Loading address"
+              :aria-label="$t('loading_address')"
             />
             <template v-else>
-              {{ authStore.user?.address || 'Not provided' }}
+              {{ authStore.user?.address || $t('not_provided') }}
             </template>
           </dd>
         </div>

@@ -4,6 +4,7 @@ export interface User {
   email?: string
   phone?: string | null
   address?: string | null
+  language?: string | null
 }
 
 export interface AuthSession {

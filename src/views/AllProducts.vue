@@ -152,24 +152,24 @@ onMounted(() => {
   <main class="container">
     <div class="page-title">
       <div class="breadcrumb">
-        <RouterLink to="/">Home</RouterLink> / Shop
+        <RouterLink to="/">{{ $t('home') }}</RouterLink> / {{ $t('shop') }}
       </div>
 
       <div class="eyebrow">
-        The collection
+        {{ $t('the_collection') }}
       </div>
-      <h1>All products</h1>
+      <h1>{{ $t('all_products') }}</h1>
       <p class="muted">
-        Find your next everyday favourite.
+        {{ $t('find_next_favourite') }}
       </p>
     </div>
 
     <div class="catalog-layout">
       <aside class="filters">
-        <h3>Filters</h3>
+        <h3>{{ $t('filters') }}</h3>
 
         <div class="filter-group">
-          <strong>Category</strong>
+          <strong>{{ $t('category') }}</strong>
 
           <select
             v-model="filters.category"
@@ -177,7 +177,7 @@ onMounted(() => {
             @change="onCategoryChange"
           >
             <option value="">
-              All categories
+              {{ $t('all_categories') }}
             </option>
 
             <option
@@ -194,7 +194,7 @@ onMounted(() => {
           v-if="filters.category"
           class="filter-group"
         >
-          <strong>Subcategory</strong>
+          <strong>{{ $t('subcategory') }}</strong>
 
           <select
             v-model="filters.subCategory"
@@ -203,7 +203,7 @@ onMounted(() => {
             @change="applyFilters"
           >
             <option value="">
-              {{ categoryStore.subCategoriesLoading ? 'Loading subcategories...' : 'All subcategories' }}
+              {{ categoryStore.subCategoriesLoading ? $t('loading_subcategories') : $t('all_subcategories') }}
             </option>
 
             <option
@@ -217,10 +217,10 @@ onMounted(() => {
         </div>
 
         <div class="filter-group">
-          <strong>Price range</strong>
+          <strong>{{ $t('price_range') }}</strong>
 
           <div class="field">
-            <label for="min-price">Minimum ($)</label>
+            <label for="min-price">{{ $t('minimum') }}</label>
             <input
               id="min-price"
               v-model="filters.minPrice"
@@ -233,7 +233,7 @@ onMounted(() => {
           </div>
 
           <div class="field">
-            <label for="max-price">Maximum ($)</label>
+            <label for="max-price">{{ $t('maximum') }}</label>
             <input
               id="max-price"
               v-model="filters.maxPrice"
@@ -247,7 +247,7 @@ onMounted(() => {
         </div>
 
         <div class="filter-group">
-          <strong>Availability</strong>
+          <strong>{{ $t('availability') }}</strong>
 
           <label>
             <input
@@ -255,7 +255,7 @@ onMounted(() => {
               type="checkbox"
               @change="applyFilters"
             >
-            In stock only
+            {{ $t('in_stock_only') }}
           </label>
         </div>
       </aside>
@@ -268,39 +268,37 @@ onMounted(() => {
           <input
             v-model="filters.search"
             type="search"
-            placeholder="Search products..."
-            aria-label="Search products"
+            :placeholder="$t('search_products')"
+            :aria-label="$t('search_products')"
           >
 
           <select
             v-model="filters.sort"
-            aria-label="Sort products"
+            :aria-label="$t('sort_products')"
             @change="applyFilters"
           >
             <option value="featured">
-              Featured
+              {{ $t('featured') }}
             </option>
             <option value="price-asc">
-              Price: Low to high
+              {{ $t('price_low_high') }}
             </option>
             <option value="price-desc">
-              Price: High to low
+              {{ $t('price_high_low') }}
             </option>
             <option value="discount">
-              Discount
+              {{ $t('discount') }}
             </option>
           </select>
         </form>
 
         <div class="section-head">
           <span class="muted">
-            Showing {{ productStore.products.length }}
-            of {{ productStore.meta?.total || 0 }} products
+            {{ $t('showing_products', { count: productStore.products.length, total: productStore.meta?.total || 0 }) }}
           </span>
 
           <span class="muted">
-            Page {{ productStore.meta?.current_page || 1 }}
-            of {{ productStore.meta?.last_page || 1 }}
+            {{ $t('page_of', { current: productStore.meta?.current_page || 1, last: productStore.meta?.last_page || 1 }) }}
           </span>
         </div>
 
@@ -318,7 +316,7 @@ onMounted(() => {
             :disabled="pagination.currentPage === 1"
             @click="changePage(pagination.currentPage - 1)"
           >
-            Previous
+            {{ $t('previous') }}
           </button>
 
           <button
@@ -333,7 +331,7 @@ onMounted(() => {
             :disabled="pagination.currentPage === pagination.lastPage"
             @click="changePage(pagination.currentPage + 1)"
           >
-            Next
+            {{ $t('next') }}
           </button>
         </div>
       </section>

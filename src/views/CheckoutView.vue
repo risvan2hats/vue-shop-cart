@@ -85,17 +85,17 @@ const placeOrder = async () => {
   <main class="container">
     <div class="page-title">
       <div class="breadcrumb">
-        <RouterLink to="/">Home</RouterLink> /
-        <RouterLink to="/cart">Cart</RouterLink> /
-        Checkout
+        <RouterLink to="/">{{ $t('home') }}</RouterLink> /
+        <RouterLink to="/cart">{{ $t('cart') }}</RouterLink> /
+        {{ $t('checkout') }}
       </div>
 
       <div class="eyebrow">
-        Secure checkout
+        {{ $t('secure_checkout') }}
       </div>
-      <h1>Complete your order</h1>
+      <h1>{{ $t('complete_your_order') }}</h1>
       <p class="muted">
-        You're just a few details away from your order.
+        {{ $t('checkout_subtitle') }}
       </p>
     </div>
 
@@ -103,16 +103,16 @@ const placeOrder = async () => {
       v-if="!cartStore.items.length"
       class="empty-state"
     >
-      <h2>Your cart is empty</h2>
+      <h2>{{ $t('your_cart_is_empty') }}</h2>
       <p class="muted">
-        Add some products before proceeding to checkout.
+        {{ $t('checkout_empty_subtitle') }}
       </p>
 
       <RouterLink
         to="/products"
         class="button"
       >
-        Continue shopping
+        {{ $t('continue_shopping') }}
       </RouterLink>
     </div>
 
@@ -124,11 +124,11 @@ const placeOrder = async () => {
       <div>
         <!-- Contact information -->
         <section class="form-card">
-          <h2>Contact information</h2>
+          <h2>{{ $t('contact_information') }}</h2>
 
           <div class="form-grid">
             <div class="field">
-              <label for="email">Email address *</label>
+              <label for="email">{{ $t('email_address_required') }}</label>
               <input
                 id="email"
                 v-model.trim="form.email"
@@ -140,7 +140,7 @@ const placeOrder = async () => {
             </div>
 
             <div class="field">
-              <label for="phone">Phone number *</label>
+              <label for="phone">{{ $t('phone_number_required') }}</label>
               <input
                 id="phone"
                 v-model.trim="form.phone"
@@ -155,11 +155,11 @@ const placeOrder = async () => {
 
         <!-- Shipping address -->
         <section class="form-card">
-          <h2>Shipping address</h2>
+          <h2>{{ $t('shipping_address') }}</h2>
 
           <div class="form-grid">
             <div class="field">
-              <label for="firstName">First name *</label>
+              <label for="firstName">{{ $t('first_name_required') }}</label>
               <input
                 id="firstName"
                 v-model.trim="form.firstName"
@@ -169,7 +169,7 @@ const placeOrder = async () => {
             </div>
 
             <div class="field">
-              <label for="lastName">Last name *</label>
+              <label for="lastName">{{ $t('last_name_required') }}</label>
               <input
                 id="lastName"
                 v-model.trim="form.lastName"
@@ -180,7 +180,7 @@ const placeOrder = async () => {
           </div>
 
           <div class="field">
-            <label for="address">Street address *</label>
+            <label for="address">{{ $t('street_address_required') }}</label>
             <input
               id="address"
               v-model.trim="form.address"
@@ -190,7 +190,7 @@ const placeOrder = async () => {
           </div>
 
           <div class="field">
-            <label for="address2">Apartment, suite, etc.</label>
+            <label for="address2">{{ $t('apartment_suite') }}</label>
             <input
               id="address2"
               v-model.trim="form.address2"
@@ -200,7 +200,7 @@ const placeOrder = async () => {
 
           <div class="form-grid">
             <div class="field">
-              <label for="city">City *</label>
+              <label for="city">{{ $t('city_required') }}</label>
               <input
                 id="city"
                 v-model.trim="form.city"
@@ -210,7 +210,7 @@ const placeOrder = async () => {
             </div>
 
             <div class="field">
-              <label for="region">State / Province *</label>
+              <label for="region">{{ $t('state_province_required') }}</label>
               <input
                 id="region"
                 v-model.trim="form.region"
@@ -220,7 +220,7 @@ const placeOrder = async () => {
             </div>
 
             <div class="field">
-              <label for="postalCode">Postal code *</label>
+              <label for="postalCode">{{ $t('postal_code_required') }}</label>
               <input
                 id="postalCode"
                 v-model.trim="form.postalCode"
@@ -230,7 +230,7 @@ const placeOrder = async () => {
             </div>
 
             <div class="field">
-              <label for="country">Country *</label>
+              <label for="country">{{ $t('country_required') }}</label>
               <select
                 id="country"
                 v-model="form.country"
@@ -238,7 +238,7 @@ const placeOrder = async () => {
                 required
               >
                 <option value="">
-                  Select country
+                  {{ $t('select_country') }}
                 </option>
                 <option value="India">
                   India
@@ -259,7 +259,7 @@ const placeOrder = async () => {
 
         <!-- Shipping method -->
         <section class="form-card">
-          <h2>Shipping method</h2>
+          <h2>{{ $t('shipping_method') }}</h2>
 
           <label class="radio-card">
             <input
@@ -269,10 +269,10 @@ const placeOrder = async () => {
             >
 
             <span>
-              <strong>Standard delivery</strong>
+              <strong>{{ $t('standard_delivery') }}</strong>
               <br>
               <span class="muted">
-                3–5 business days · {{ formatPrice(5) }}
+                {{ $t('standard_delivery_desc', { price: formatPrice(5) }) }}
               </span>
             </span>
           </label>
@@ -285,10 +285,10 @@ const placeOrder = async () => {
             >
 
             <span>
-              <strong>Express delivery</strong>
+              <strong>{{ $t('express_delivery') }}</strong>
               <br>
               <span class="muted">
-                1–2 business days · {{ formatPrice(12) }}
+                {{ $t('express_delivery_desc', { price: formatPrice(12) }) }}
               </span>
             </span>
           </label>
@@ -296,7 +296,7 @@ const placeOrder = async () => {
 
         <!-- Payment method -->
         <section class="form-card">
-          <h2>Payment method</h2>
+          <h2>{{ $t('payment_method') }}</h2>
 
           <label class="radio-card">
             <input
@@ -306,24 +306,23 @@ const placeOrder = async () => {
             >
 
             <span>
-              <strong>Cash on Delivery</strong>
+              <strong>{{ $t('cash_on_delivery') }}</strong>
               <br>
               <span class="muted">
-                Pay when your order arrives.
+                {{ $t('cod_description') }}
               </span>
             </span>
           </label>
 
           <p class="muted">
-            Online payment can be added later by integrating a
-            payment gateway.
+            {{ $t('payment_gateway_note') }}
           </p>
         </section>
       </div>
 
       <!-- Order summary -->
       <aside class="summary">
-        <h2>Order summary</h2>
+        <h2>{{ $t('order_summary') }}</h2>
 
         <div
           v-for="item in cartStore.items"
@@ -340,27 +339,27 @@ const placeOrder = async () => {
         </div>
 
         <div class="summary-line">
-          <span>Subtotal</span>
+          <span>{{ $t('subtotal') }}</span>
           <strong>{{ formatPrice(subtotal) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Tax (8%)</span>
+          <span>{{ $t('tax') }}</span>
           <strong>{{ formatPrice(tax) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Shipping</span>
+          <span>{{ $t('shipping') }}</span>
           <strong>{{ formatPrice(shippingCost) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Discount</span>
+          <span>{{ $t('discount') }}</span>
           <strong>{{ formatPrice(0) }}</strong>
         </div>
 
         <div class="summary-line summary-total">
-          <span>Total</span>
+          <span>{{ $t('total') }}</span>
           <span>{{ formatPrice(total) }}</span>
         </div>
 
@@ -371,21 +370,20 @@ const placeOrder = async () => {
         >
           {{
             submitting
-              ? 'Processing...'
-              : `Place order · ${formatPrice(total)}`
+              ? $t('processing')
+              : $t('place_order_with_total', { total: formatPrice(total) })
           }}
         </button>
 
         <p class="muted checkout-disclaimer">
-          By placing your order, you agree to our terms and
-          privacy policy.
+          {{ $t('checkout_terms_disclaimer') }}
         </p>
 
         <RouterLink
           to="/cart"
           class="muted"
         >
-          Return to cart
+          {{ $t('return_to_cart') }}
         </RouterLink>
       </aside>
     </form>

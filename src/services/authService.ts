@@ -14,6 +14,11 @@ const authService = {
     const response = await api.get<ApiEnvelope<User>>('/user')
     return response.data.data
   },
+
+  async updateLanguage(language: string) {
+    const response = await api.patch<ApiEnvelope<User>>('/user', { language })
+    return response.data.data
+  },
 }
 
 export default authService

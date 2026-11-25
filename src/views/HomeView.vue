@@ -29,23 +29,22 @@ onMounted(() => {
       <div class="container hero-grid">
         <div>
           <div class="eyebrow">
-            The everyday edit
+            {{ $t('the_everyday_edit') }}
           </div>
-          <h1>Good finds.<br>Better living.</h1>
+          <h1>{{ $t('good_finds_better_living') }}</h1>
           <p>
-            Thoughtfully picked essentials for your everyday routine. Explore the latest drops, trusted
-            favourites, and little upgrades that make a difference.
+            {{ $t('hero_description') }}
           </p>
           <div class="actions">
             <RouterLink
               class="button"
               to="/products"
-            >Shop all products</RouterLink>
+            >{{ $t('shop_all_products') }}</RouterLink>
             <RouterLink
               class="button secondary"
               :to="{ name: 'products', query: { sort: 'discount' } }"
             >
-              Explore deals</RouterLink>
+              {{ $t('explore_deals') }}</RouterLink>
           </div>
         </div>
         <div class="hero-art">
@@ -61,11 +60,11 @@ onMounted(() => {
         <div class="section-head">
           <div>
             <div class="eyebrow">
-              Browse by interest
+              {{ $t('browse_by_interest') }}
             </div>
-            <h2>Shop categories</h2>
+            <h2>{{ $t('shop_categories') }}</h2>
           </div>
-          <RouterLink to="/products">View all →</RouterLink>
+          <RouterLink to="/products">{{ $t('view_all') }} →</RouterLink>
         </div>
         <div class="category-grid">
           <!-- Loading -->
@@ -85,7 +84,7 @@ onMounted(() => {
             v-else-if="!categoryStore.categories.length"
             class="empty-state"
           >
-            No categories available.
+            {{ $t('no_categories_available') }}
           </div>
 
           <!-- Categories -->
@@ -107,12 +106,12 @@ onMounted(() => {
         <div class="section-head">
           <div>
             <div class="eyebrow">
-              Picked for you
+              {{ $t('picked_for_you') }}
             </div>
-            <h2>Featured products</h2>
+            <h2>{{ $t('featured_products') }}</h2>
           </div>
 
-          <RouterLink to="/products">Shop all →</RouterLink>
+          <RouterLink to="/products">{{ $t('shop_all') }} →</RouterLink>
         </div>
 
         <ProductListing
@@ -126,15 +125,15 @@ onMounted(() => {
         <div class="banner">
           <div>
             <div class="eyebrow banner-eyebrow">
-              A little something extra
+              {{ $t('a_little_something_extra') }}
             </div>
-            <h2>Make room for better.</h2>
-            <p>Discover fresh arrivals and limited-time offers.</p>
+            <h2>{{ $t('make_room_for_better') }}</h2>
+            <p>{{ $t('collection_description') }}</p>
           </div>
           <RouterLink
             class="button secondary"
             to="/products"
-          >Explore the collection</RouterLink>
+          >{{ $t('explore_collection') }}</RouterLink>
         </div>
       </div>
     </section>

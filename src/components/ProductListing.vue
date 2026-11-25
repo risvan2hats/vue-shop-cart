@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { useCartStore } from '@/stores/cartStore';
 import { useProduct } from '@/composables/useProduct';
 import type { Product, AttributeMap } from '@/types/productTypes';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
   products?: Product[];
@@ -97,19 +100,19 @@ const isAddingToCart = (product: Product) => {
  * Get add-to-cart button label.
  */
 const getButtonLabel = (product: Product) => {
-  if (isAddingToCart(product)) return 'Adding...';
-  if (isInCart(product)) return 'Already in Cart';
+  if (isAddingToCart(product)) return t('adding');
+  if (isInCart(product)) return t('already_in_cart');
 
   if (
     getActiveVariants(product).length &&
     !getProductVariant(product)
   ) {
-    return 'Select options';
+    return t('select_options');
   }
 
-  if (isOutOfStock(product)) return 'Out of stock';
+  if (isOutOfStock(product)) return t('out_of_stock');
 
-  return 'Add to Cart';
+  return t('add_to_cart');
 };
 
 /**
@@ -166,7 +169,7 @@ watch(
     v-if="loading"
     class="grid"
     role="status"
-    aria-label="Loading products"
+    :aria-label="$t('loading_products')"
     aria-busy="true"
   >
     <article
@@ -188,7 +191,7 @@ watch(
     v-else-if="!products.length"
     class="empty-state"
   >
-    No products available.
+    {{ $t('no_products_available') }}
   </div>
 
   <!-- Product listing -->
@@ -219,7 +222,7 @@ watch(
         <div class="product-info">
           <h3>{{ product.title }}</h3>
 
-          <p>{{ product.category?.name || 'General' }}</p>
+          <p>{{ product.category?.name || $t('general') }}</p>
           <p v-if="product.sub_category?.name">
             {{ product.sub_category.name }}
           </p>

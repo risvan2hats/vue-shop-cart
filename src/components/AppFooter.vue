@@ -6,8 +6,8 @@ const year = new Date().getFullYear()
 <template>
   <footer class="footer">
     <div class="container footer-inner">
-      <span>© {{ year }} {{ SITE_TITLE }} Store. All rights reserved.</span>
-      <span>Help · Shipping · Returns · Privacy</span>
+      <span>© {{ year }} {{ SITE_TITLE }} Store. {{ $t('all_rights_reserved') }}</span>
+      <span>{{ $t('help') }} · {{ $t('shipping') }} · {{ $t('returns') }} · {{ $t('privacy') }}</span>
     </div>
   </footer>
 </template>

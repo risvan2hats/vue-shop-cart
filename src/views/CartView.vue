@@ -67,15 +67,15 @@ const removeItem = async (cartItemId: number | string) => {
   <main class="container">
     <div class="page-title">
       <div class="breadcrumb">
-        <RouterLink to="/">Home</RouterLink> / Cart
+        <RouterLink to="/">{{ $t('home') }}</RouterLink> / {{ $t('cart') }}
       </div>
 
       <div class="eyebrow">
-        Almost yours
+        {{ $t('almost_yours') }}
       </div>
-      <h1>Your cart</h1>
+      <h1>{{ $t('your_cart') }}</h1>
       <p class="muted">
-        Review your items before checking out.
+        {{ $t('review_items_before_checkout') }}
       </p>
     </div>
 
@@ -83,16 +83,16 @@ const removeItem = async (cartItemId: number | string) => {
       v-if="!cartStore.items.length"
       class="empty-state"
     >
-      <h2>Your cart is empty</h2>
+      <h2>{{ $t('your_cart_is_empty') }}</h2>
       <p class="muted">
-        Looks like you haven't added anything yet.
+        {{ $t('cart_empty_subtitle') }}
       </p>
 
       <RouterLink
         to="/products"
         class="button"
       >
-        Start shopping
+        {{ $t('start_shopping') }}
       </RouterLink>
     </div>
 
@@ -125,7 +125,7 @@ const removeItem = async (cartItemId: number | string) => {
             </h3>
 
             <p class="muted">
-              {{ item.product?.category?.name || 'General' }}
+              {{ item.product?.category?.name || $t('general') }}
             </p>
 
             <p
@@ -144,7 +144,7 @@ const removeItem = async (cartItemId: number | string) => {
               {{ formatPrice(getCurrentPrice(item)) }}
             </p>
 
-            <label class="muted">Quantity</label>
+            <label class="muted">{{ $t('quantity') }}</label>
 
             <div class="quantity-control">
               <button
@@ -181,7 +181,7 @@ const removeItem = async (cartItemId: number | string) => {
                 :disabled="cartStore.removingItemId === item.id"
                 @click="removeItem(item.id)"
               >
-                {{ cartStore.removingItemId === item.id ? 'Removing...' : 'Remove' }}
+                {{ cartStore.removingItemId === item.id ? $t('removing') : $t('remove') }}
               </button>
             </p>
           </div>
@@ -191,35 +191,35 @@ const removeItem = async (cartItemId: number | string) => {
           <RouterLink
             to="/products"
             class="button secondary"
-          >Continue shopping</RouterLink>
+          >{{ $t('continue_shopping') }}</RouterLink>
         </div>
       </section>
 
       <aside class="summary">
-        <h2>Order summary</h2>
+        <h2>{{ $t('order_summary') }}</h2>
 
         <div class="summary-line">
-          <span>Subtotal</span>
+          <span>{{ $t('subtotal') }}</span>
           <strong>{{ formatPrice(subtotal) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Estimated tax (8%)</span>
+          <span>{{ $t('estimated_tax') }}</span>
           <strong>{{ formatPrice(tax) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Shipping</span>
+          <span>{{ $t('shipping') }}</span>
           <strong>{{ formatPrice(shipping) }}</strong>
         </div>
 
         <div class="summary-line">
-          <span>Discount</span>
+          <span>{{ $t('discount') }}</span>
           <strong>{{ formatPrice(0) }}</strong>
         </div>
 
         <div class="summary-line summary-total">
-          <span>Total</span>
+          <span>{{ $t('total') }}</span>
           <span>{{ formatPrice(total) }}</span>
         </div>
 
@@ -227,12 +227,11 @@ const removeItem = async (cartItemId: number | string) => {
           to="/checkout"
           class="button checkout-submit"
         >
-          Proceed to checkout
+          {{ $t('proceed_to_checkout') }}
         </RouterLink>
 
         <p class="muted cart-disclaimer">
-          Shipping and tax are estimates. Final amounts are confirmed at
-          checkout.
+          {{ $t('cart_disclaimer') }}
         </p>
       </aside>
     </div>

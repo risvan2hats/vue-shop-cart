@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 import type { LoginCredentials, User } from '@/types/authTypes'
 import { useCartStore } from '@/stores/cartStore'
+import { useProductStore } from '@/stores/productStore'
 import { showToast } from '@/composables/showToast'
 
 function readStoredUser(): User | null {
@@ -40,6 +41,11 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('auth_user', JSON.stringify(user))
         localStorage.setItem('auth_token', token)
 
+        if (user.language) {
+          localStorage.setItem('language', user.language)
+          useProductStore().setLocale(user.language)
+        }
+
         const cartStore = useCartStore()
         await cartStore.mergeGuestCart()
 
@@ -65,6 +71,25 @@ export const useAuthStore = defineStore('auth', {
         return null
       } finally {
         this.profileLoading = false
+      }
+    },
+
+    /**
+     * Update user language preference on backend and local storage
+     */
+    async updateLanguage(language: string) {
+      if (this.user) {
+        this.user.language = language
+        localStorage.setItem('auth_user', JSON.stringify(this.user))
+      }
+      localStorage.setItem('language', language)
+
+      if (this.isAuthenticated) {
+        try {
+          await authService.updateLanguage(language)
+        } catch {
+          // ignore
+        }
       }
     },
 

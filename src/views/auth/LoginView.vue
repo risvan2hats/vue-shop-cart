@@ -32,34 +32,34 @@ const handleLogin = async () => {
     <div class="login-container">
       <div class="page-title">
         <div class="eyebrow">
-          Welcome back
+          {{ $t('welcome_back') }}
         </div>
-        <h1>Sign in</h1>
+        <h1>{{ $t('sign_in') }}</h1>
         <p class="muted">
-          Sign in to continue shopping.
+          {{ $t('sign_in_subtitle') }}
         </p>
       </div>
 
       <form @submit.prevent="handleLogin">
         <div class="field">
-          <label for="email">Email address</label>
+          <label for="email">{{ $t('email_address') }}</label>
           <input
             id="email"
             v-model="credentials.email"
             type="email"
-            placeholder="Enter your email"
+            :placeholder="$t('enter_email')"
             autocomplete="email"
             required
           >
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
+          <label for="password">{{ $t('password') }}</label>
           <input
             id="password"
             v-model="credentials.password"
             type="password"
-            placeholder="Enter your password"
+            :placeholder="$t('enter_password')"
             autocomplete="current-password"
             required
           >
@@ -69,7 +69,7 @@ const handleLogin = async () => {
           type="submit"
           :disabled="authStore.loading"
         >
-          {{ authStore.loading ? 'Signing in...' : 'Sign in' }}
+          {{ authStore.loading ? $t('signing_in') : $t('sign_in') }}
         </button>
       </form>
     </div>
